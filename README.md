@@ -11,9 +11,11 @@ width="500px" height="122px"/></a>
 [7bridges](https://7bridges.eu) Clojure driver
 [clj-odbp](https://github.com/7bridges-eu/clj-odbp).
 
+Give it a try: https://carter.7bridges.eu/
+
 ## Self-hosted setup
 
-If you to self-host the project, or intend to use the code as a base for a
+If you want to self-host the project, or intend to use the code as a base for a
 personal project, create a `conf/config.edn` file in the root of the project
 with the following format.
 
@@ -29,7 +31,7 @@ with the following format.
 ```
 
 `consumer-key` and `consumer-secret` are the Consumer Key and Consumer Secret
-you will find in “Keys and Access Tokens” in your Twitter application
+you will find in “Keys and Access Tokens” of your Twitter application
 management.
 
 Then run:
