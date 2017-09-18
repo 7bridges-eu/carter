@@ -14,19 +14,19 @@
 
 (ns carter.tasks.reset
   (:require [carter.services.orientdb :as db]
-            [mount.core :as mount]
-            [taoensso.timbre :as log]))
+            [mount.core :as mount]))
 
 (defn -main
   []
-  (mount/start #'carter.services.config/config)
-  (log/infof "Deleting Vertexes")
+  (mount/start #'carter.services.config/config
+               #'carter.services.orientdb/orientdb)
+  (println "Deleting Vertexes")
   (db/execute! "delete vertex LoggedUser")
   (db/execute! "delete vertex User")
   (db/execute! "delete vertex Tweet")
   (db/execute! "delete vertex Hashtag")
-  (log/infof "Deleting Edges")
+  (println "Deleting Edges")
   (db/execute! "delete edge Sees")
   (db/execute! "delete edge Tweeted")
   (db/execute! "delete edge Has")
-  (log/infof "reset-db done"))
+  (println "reset-db done"))
