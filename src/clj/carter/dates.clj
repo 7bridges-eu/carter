@@ -22,22 +22,25 @@
 (defn twitter-date->orient-date
   "Convert `date-str` from Twitter API date format to OrientDB date format."
   [date-str]
-  (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")
-        formatter (f/with-locale
-                    (f/formatter "EEE MMM dd HH:mm:ss Z yyyy")
-                    Locale/ENGLISH)
-        date (c/to-date (f/parse formatter date-str))]
-    (.format orient-date-format date)))
+  (when-not (nil? date-str)
+    (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")
+          formatter (f/with-locale
+                      (f/formatter "EEE MMM dd HH:mm:ss Z yyyy")
+                      Locale/ENGLISH)
+          date (c/to-date (f/parse formatter date-str))]
+      (.format orient-date-format date))))
 
 (defn java-date->orient-date
   "Format a java.util.Date `java-date` to a string with a format suitable for
   OrientDB datetime properties."
   [java-date]
-  (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")]
-    (.format orient-date-format java-date)))
+  (when-not (nil? java-date)
+    (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")]
+      (.format orient-date-format java-date))))
 
 (defn orient-date->ui-date
   "Format `orient-date` from OrientDB to a string to be displayed client-side."
   [orient-date]
-  (let [ui-date-format (SimpleDateFormat. "HH:mm:ss dd-MM-yyyy")]
-    (.format ui-date-format orient-date)))
+  (when-not (nil? orient-date)
+    (let [ui-date-format (SimpleDateFormat. "HH:mm:ss dd-MM-yyyy")]
+      (.format ui-date-format orient-date))))
