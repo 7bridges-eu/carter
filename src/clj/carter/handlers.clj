@@ -35,7 +35,7 @@
   - redirect to the homepage"
   [token verifier]
   (s.twitter/authorize-app token verifier)
-  (r.twitter/save-first-100-tweets)
+  (r.twitter/save-first-150-tweets)
   (let [user-id (s.twitter/logged-user-id)]
     (response/content-type
      (-> (response/ok (index-html "carter - Home"))

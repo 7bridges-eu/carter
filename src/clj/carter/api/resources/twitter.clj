@@ -117,8 +117,8 @@
          (map save-fn)
          doall)))
 
-(defn save-first-100-tweets
-  "Save the first 100 tweets in the timeline of the logged user."
+(defn save-first-150-tweets
+  "Save the first 150 tweets in the timeline of the logged user."
   []
   (let [user-id (twitter/logged-user-id)]
-    (save-user-tweets user-id 100)))
+    (save-user-tweets user-id 150)))

@@ -83,4 +83,8 @@
                            t/has-hashtags? (fn [ts] ts)
                            t/process-tweet (fn [t] t)
                            t/save-tweet (fn [id t] t)]
-               (t/save-user-tweets "test" 10) => tweets)))
+               (t/save-user-tweets "test" 10) => tweets))
+       (fact "save-first-150-tweets should accept no parameters"
+             (with-redefs [twitter/logged-user-id (fn [])
+                           t/save-user-tweets (fn [id n])]
+               (t/save-first-150-tweets) => nil)))

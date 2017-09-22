@@ -15,5 +15,5 @@
 (ns carter.db)
 
 (def default-db {:graph-width 850
-                 :tweet-count 100
+                 :tweet-count 150
                  :loading false})
