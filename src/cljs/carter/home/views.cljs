@@ -162,7 +162,7 @@
             [:div.ui.basic.segment
              [:p
               "Hello " [:strong (:screen-name @logged-user)] "! This is a graph
-              of the to 10 most used hashtags in your timeline."]
+              of the 10 most used hashtags in your timeline."]
              [:p
               "It was updated on " date ", at " hours ". Would you like to "
               [:a {:style {:cursor "pointer"}
