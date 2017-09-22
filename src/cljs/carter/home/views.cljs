@@ -15,6 +15,7 @@
 (ns carter.home.views
   (:require [carter.common :as common]
             [carter.validation :as v]
+            [clojure.string :as s]
             [cljsjs.d3]
             [re-frame.core :as rf]
             [reagent.core :as reagent]))
@@ -142,9 +143,10 @@
 (defn home-panel
   []
   (fn []
-    (let [screen-name (rf/subscribe [:logged-user-screen-name])
-          tweet-count (rf/subscribe [:tweet-count])
-          message (rf/subscribe [:message])
+    (let [logged-user (rf/subscribe [:logged-user])
+          last-update (s/split (:last-update @logged-user) #" ")
+          date (second last-update)
+          hours (first last-update)
           data (rf/subscribe [:data])
           loading? (rf/subscribe [:loading])]
       (if @loading?
@@ -157,23 +159,16 @@
            {:style {:padding-top "2em" :text-align "center"}}
            [:div {:style {:padding-bottom "1em" :text-align "center"}}
             [:div.ui.compact.blue.message
-             [:h3.ui.blue.header "Hello " @screen-name "!"]]]
+             [:h3.ui.blue.header "Hello " (:screen-name @logged-user) "!"]]]
            [:div.ui.labeled.mini.input
             {:style {:padding-right ".5em"}}
-            [:div.ui.label "Number of tweets"]
-            [:input
-             {:type "number"
-              :value (v/or-empty-string @tweet-count)
-              :on-change #(rf/dispatch
-                           [:tweet-count-change (-> % .-target .-value)])}]]
-           [:button.ui.primary.button
-            {:on-click #(rf/dispatch [:get-tweets])}
-            "Display graph"]]
-          (when-not (empty? @message)
-            [:div
-             {:style {:padding "1em" :text-align "center"}}
-             [:div.ui.tiny.compact.success.message
-              [:p @message]]])
+            [:div.ui.basic.segment
+             [:p
+              "This graph was updated on " date ", at " hours
+              ". Would you like to "
+              [:a {:style {:cursor "pointer"}
+                   :on-click #(rf/dispatch [:get-tweets])}
+               "refresh it"] "?"]]]]
           (when-not (empty? @data)
             [:div
              {:style {:padding "1em" :text-align "center"}}

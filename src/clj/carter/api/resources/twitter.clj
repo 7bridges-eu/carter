@@ -17,27 +17,13 @@
              [hashtag :as hashtag]
              [tweet :as tweet]
              [user :as user]]
+            [carter.dates :as d]
             [carter.model
              [has :as has]
              [logged-user :as logged-user]
              [sees :as sees]
              [tweeted :as tweeted]]
-            [carter.services.twitter :as twitter]
-            [clj-time
-             [coerce :as c]
-             [format :as f]])
-  (:import java.text.SimpleDateFormat
-           java.util.Locale))
-
-(defn twitter-date->orient-date
-  "Convert `date-str` from Twitter API date format to OrientDB date format."
-  [date-str]
-  (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")
-        formatter (f/with-locale
-                    (f/formatter "EEE MMM dd HH:mm:ss Z yyyy")
-                    Locale/ENGLISH)
-        date (c/to-date (f/parse formatter date-str))]
-    (.format orient-date-format date)))
+            [carter.services.twitter :as twitter]))
 
 (defn has-hashtags?
   "Check if the `tweet` has hashtags."
@@ -57,7 +43,7 @@
   "Extract tweet id, text and created_at from `tweet`."
   [tweet]
   (let [{:keys [id text created_at]} tweet
-        created_at (twitter-date->orient-date created_at)]
+        created_at (d/twitter-date->orient-date created_at)]
     {:id id :text text :created_at created_at}))
 
 (defn get-hashtags
@@ -106,6 +92,18 @@
     (doall (map #(create-has tweet % logged-user-id) hashtags))
     (create-sees logged-user tweet)))
 
+(defn update-last-update
+  "Update the last_update property of the LoggedUser vertex identified
+  by `logged-user-id`."
+  [logged-user-id]
+  (let [user (logged-user/find-by-id logged-user-id)
+        params {:rid (:_rid user)
+                :id (:id user)
+                :username (:username user)
+                :screen_name (:screen_name user)
+                :last_update (d/java-date->orient-date (java.util.Date.))}]
+    (logged-user/update-by-rid params)))
+
 (defn save-user-tweets
   "Get `user` tweets up to `tweet-count` and save them."
   [logged-user-id tweet-count]
@@ -115,7 +113,8 @@
          (filter has-hashtags?)
          (map process-tweet)
          (map save-fn)
-         doall)))
+         doall)
+    (update-last-update logged-user-id)))
 
 (defn save-first-150-tweets
   "Save the first 150 tweets in the timeline of the logged user."

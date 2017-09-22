@@ -17,11 +17,6 @@
             [day8.re-frame.http-fx]
             [re-frame.core :as rf]))
 
-(rf/reg-event-db
- :tweet-count-change
- (fn [db [_ value]]
-   (assoc db :tweet-count value)))
-
 (rf/reg-event-fx
  :get-tweets
  (fn [{db :db} _]
@@ -47,4 +42,5 @@
     (ajax/get-request "/api/hashtag/tweet"
                       [:load-data]
                       [:bad-response])
+    :dispatch [:get-logged-user]
     :db (assoc db :loading false))))

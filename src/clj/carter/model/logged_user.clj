@@ -22,8 +22,9 @@
    :find-by-username "select from LoggedUser where username = :username"})
 
 (def update-queries
-  {:update-by-rid "update :rid set id = :id, username = :username,
-                   screen_name = :screen_name"})
+  {:update-by-rid "update LoggedUser set id = :id, username = :username,
+                   screen_name = :screen_name, last_update = :last_update
+                   where @rid = :rid"})
 
 (defn find-all
   "Retrieve all the LoggedUser vertexes."
