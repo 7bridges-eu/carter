@@ -36,7 +36,8 @@
   (db/execute! "create class LoggedUser extends V")
   (db/execute! "create property LoggedUser.id string")
   (db/execute! "create property LoggedUser.username string")
-  (db/execute! "create property LoggedUser.screen_name string"))
+  (db/execute! "create property LoggedUser.screen_name string")
+  (db/execute! "create property LoggedUser.last_update datetime"))
 
 (defn- create-user!
   "Create User vertex."
