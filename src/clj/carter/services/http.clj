@@ -31,9 +31,10 @@
        (route/resources "/")
        (compojure/GET "/" request (handlers/sign-in request))
        (-> (compojure/GET
-            "/home" [oauth_token oauth_verifier]
-            (handlers/prepare-homepage oauth_token oauth_verifier))
+            "/callback" [oauth_token oauth_verifier]
+            (handlers/callback oauth_token oauth_verifier))
            (wrap-defaults api-defaults))
+       (compojure/GET "/home" request (handlers/homepage))
        api/routes)
       cookies/wrap-cookies
       reload/wrap-reload))

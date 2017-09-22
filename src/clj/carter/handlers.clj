@@ -27,15 +27,16 @@
       (response/ok (index-html "carter - Sign in"))
       (response/found "/home"))))
 
-(defn prepare-homepage
-  "Prepare the homepage for the logged user who authorized Carter:
-
-  - complete app authorization
-  - save the first 100 tweets of the logged user timeline
-  - redirect to the homepage"
+(defn callback
+  "Complete app authorization and save the first 150 tweets."
   [token verifier]
   (s.twitter/authorize-app token verifier)
   (r.twitter/save-first-150-tweets)
+  (response/found "/home"))
+
+(defn homepage
+  "Redirect the logged user to the homepage."
+  []
   (let [user-id (s.twitter/logged-user-id)]
     (response/content-type
      (-> (response/ok (index-html "carter - Home"))

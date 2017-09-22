@@ -171,5 +171,5 @@
                "refresh it"] "?"]]]]
           (when-not (empty? @data)
             [:div
-             {:style {:padding "1em" :text-align "center"}}
+             {:style {:text-align "center"}}
              [graph]])]]))))
