@@ -43,9 +43,8 @@
 (rf/reg-event-fx
  :get-hashtags-tweets
  (fn [{db :db} _]
-   (let [tweet-count (get db :tweet-count 0)]
-     (assoc
-      (ajax/get-request (str "/api/hashtag/tweet/" tweet-count)
-                        [:load-data]
-                        [:bad-response])
-      :db (assoc db :loading false)))))
+   (assoc
+    (ajax/get-request "/api/hashtag/tweet"
+                      [:load-data]
+                      [:bad-response])
+    :db (assoc db :loading false))))

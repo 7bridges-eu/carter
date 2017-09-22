@@ -33,9 +33,9 @@
              (with-redefs [db/query! (fn [query params] [params])]
                (let [rid "#21:0"]
                  (model/find-by-user rid) => [{:rid "#21:0"}])))
-       (fact "find-tweet-count requires tweet-count and logged-user-id as parameters"
+       (fact "find-top-10-hashtags requires logged-user-id as parameter"
              (with-redefs [db/query! (fn [query] query)]
-               (model/find-tweet-count 1 "test") => truthy))
+               (model/find-top-10-hashtags "test") => truthy))
        (fact "create requires a map (e.g.: {:name '#test'}) as a parameter"
              (with-redefs [db/insert! (fn [class params] params)]
                (let [params {:name "#test"}]

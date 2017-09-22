@@ -28,15 +28,18 @@
                      .inV(){as: hashtag,
                             where: ($matched.user != $currentMatch)}
                     RETURN hashtag)"
-   :find-tweet-count "select hashtag.name as hashtag, count(tweet) as tweets,
-                      tweet.created_at as dt from (
-                        MATCH {class: Hashtag, as: hashtag}
-                         .inE('Has'){as: has, where: (logged_user_id = %s)}
-                         .outV('Tweet'){as: tweet}
-                        RETURN hashtag, tweet)
-                      group by hashtag
-                      order by dt desc
-                      limit %s"})
+   :find-top-10-hashtags "select hashtag, tweets from (
+                           select hashtag.name as hashtag,
+                                  count(tweet) as tweets,
+                                  tweet.created_at as dt from (
+                             MATCH {class: Hashtag, as: hashtag}
+                             .inE('Has'){as: has, where: (logged_user_id = %s)}
+                             .outV('Tweet'){as: tweet}
+                             RETURN hashtag, tweet)
+                           group by hashtag
+                           order by dt desc)
+                          order by tweets desc
+                          limit 10"})
 
 (def update-queries
   {:update-by-rid "update :rid set name = :name"})
@@ -67,12 +70,12 @@
   [user]
   (find-by :find-by-user {:rid user}))
 
-(defn find-tweet-count
-  "For the home timeline of `logged-user-id`, return `tweet-count` tweets
-  for every hashtag."
-  [tweet-count logged-user-id]
-  (let [query (:find-tweet-count select-queries)
-        formatted-query (format query logged-user-id tweet-count)]
+(defn find-top-10-hashtags
+  "For the home timeline of `logged-user-id`, return the top 10 most used
+   hashtags."
+  [logged-user-id]
+  (let [query (:find-top-10-hashtags select-queries)
+        formatted-query (format query logged-user-id)]
     (db/query! formatted-query)))
 
 (defn create

@@ -43,14 +43,12 @@
   (api/context
    "/api/hashtag" []
    :tags ["operations"]
-   (api/GET "/tweet/:tweet-count" req
+   (api/GET "/tweet" req
             :return [s.hashtag/tweet-count-response]
             :summary "returns the last tweet-count tweets"
-            :path-params [tweet-count :- String]
             (let [logged-user-id (get-in req [:cookies "user-id" :value])]
               (response/ok
-               (r.hashtag/hashtags-with-tweets-count
-                logged-user-id tweet-count)))))
+               (r.hashtag/find-top-10-hashtags logged-user-id)))))
 
   (api/context
    "/api/tweet" [hashtag]

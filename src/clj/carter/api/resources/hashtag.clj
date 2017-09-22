@@ -31,11 +31,11 @@
   (let [names (map #(hash-map :name %) hashtags)]
     (doall (map save-hashtag names))))
 
-(defn hashtags-with-tweets-count
-  "For `tweet-count` tweets, return a sequence of maps with the number of tweets
-  for each hashtag from `logged-user-id` home timeline."
-  [logged-user-id tweet-count]
-  (let [result (model/find-tweet-count tweet-count logged-user-id)]
+(defn find-top-10-hashtags
+  "Return a sequence of maps with hashtag and number of tweets containing that
+  hashtag from `logged-user-id` home timeline."
+  [logged-user-id]
+  (let [result (model/find-top-10-hashtags logged-user-id)]
     (if (empty? result)
       []
       (map #(select-keys % [:hashtag :tweets]) result))))
