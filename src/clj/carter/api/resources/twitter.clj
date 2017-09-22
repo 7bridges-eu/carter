@@ -17,27 +17,13 @@
              [hashtag :as hashtag]
              [tweet :as tweet]
              [user :as user]]
+            [carter.dates :as d]
             [carter.model
              [has :as has]
              [logged-user :as logged-user]
              [sees :as sees]
              [tweeted :as tweeted]]
-            [carter.services.twitter :as twitter]
-            [clj-time
-             [coerce :as c]
-             [format :as f]])
-  (:import java.text.SimpleDateFormat
-           java.util.Locale))
-
-(defn twitter-date->orient-date
-  "Convert `date-str` from Twitter API date format to OrientDB date format."
-  [date-str]
-  (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")
-        formatter (f/with-locale
-                    (f/formatter "EEE MMM dd HH:mm:ss Z yyyy")
-                    Locale/ENGLISH)
-        date (c/to-date (f/parse formatter date-str))]
-    (.format orient-date-format date)))
+            [carter.services.twitter :as twitter]))
 
 (defn has-hashtags?
   "Check if the `tweet` has hashtags."
@@ -57,7 +43,7 @@
   "Extract tweet id, text and created_at from `tweet`."
   [tweet]
   (let [{:keys [id text created_at]} tweet
-        created_at (twitter-date->orient-date created_at)]
+        created_at (d/twitter-date->orient-date created_at)]
     {:id id :text text :created_at created_at}))
 
 (defn get-hashtags

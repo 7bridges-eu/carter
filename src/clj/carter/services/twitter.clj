@@ -13,7 +13,8 @@
 ;; limitations under the License.
 
 (ns carter.services.twitter
-  (:require [carter.model.logged-user :as logged-user]
+  (:require [carter.dates :as d]
+            [carter.model.logged-user :as logged-user]
             [carter.services.config :refer [config]]
             [oauth.client :as oauth]
             [twitter.api.restful :refer :all]
@@ -97,12 +98,20 @@
                                    exception-rethrow)))
 
 (defn save-logged-user
-  "Save logged user data."
+  "Save logged user data.
+  Update `oauth-data` atom with logged user id and save the logged user
+  in the database if not already present."
   []
   (let [response (verify-credentials)
-        {id :id_str username :name screen_name :screen_name} response]
+        {id :id_str username :name screen_name :screen_name} response
+        logged-user (logged-user/find-by-id id)]
     (swap! oauth-data assoc :logged-user-id id)
-    (logged-user/create {:id id :username username :screen_name screen_name})))
+    (when (nil? logged-user)
+      (logged-user/create
+       {:id id
+        :username username
+        :screen_name screen_name
+        :last_update (d/java-date->orient-date (java.util.Date.))}))))
 
 (defn authorize-app
   "Complete app authorization.
