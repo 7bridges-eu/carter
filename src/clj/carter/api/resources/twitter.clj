@@ -92,6 +92,18 @@
     (doall (map #(create-has tweet % logged-user-id) hashtags))
     (create-sees logged-user tweet)))
 
+(defn update-last-update
+  "Update the last_update property of the LoggedUser vertex identified
+  by `logged-user-id`."
+  [logged-user-id]
+  (let [user (logged-user/find-by-id logged-user-id)
+        params {:rid (:_rid user)
+                :id (:id user)
+                :username (:username user)
+                :screen_name (:screen_name user)
+                :last_update (d/java-date->orient-date (java.util.Date.))}]
+    (logged-user/update-by-rid params)))
+
 (defn save-user-tweets
   "Get `user` tweets up to `tweet-count` and save them."
   [logged-user-id tweet-count]
@@ -101,7 +113,8 @@
          (filter has-hashtags?)
          (map process-tweet)
          (map save-fn)
-         doall)))
+         doall)
+    (update-last-update logged-user-id)))
 
 (defn save-first-150-tweets
   "Save the first 150 tweets in the timeline of the logged user."
