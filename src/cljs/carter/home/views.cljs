@@ -157,15 +157,14 @@
           [common/page-title "carter"]
           [:div
            {:style {:padding-top "2em" :text-align "center"}}
-           [:div {:style {:padding-bottom "1em" :text-align "center"}}
-            [:div.ui.compact.blue.message
-             [:h3.ui.blue.header "Hello " (:screen-name @logged-user) "!"]]]
            [:div.ui.labeled.mini.input
             {:style {:padding-right ".5em"}}
             [:div.ui.basic.segment
              [:p
-              "This graph was updated on " date ", at " hours
-              ". Would you like to "
+              "Hello " [:strong (:screen-name @logged-user)] "! This is a graph
+              of the to 10 most used hashtags in your timeline."]
+             [:p
+              "It was updated on " date ", at " hours ". Would you like to "
               [:a {:style {:cursor "pointer"}
                    :on-click #(rf/dispatch [:get-tweets])}
                "refresh it"] "?"]]]]
