@@ -39,7 +39,7 @@
 (rf/reg-event-db
  :load-user
  (fn [db [_ value]]
-   (assoc db :logged-user-screen-name (:screen-name value))))
+   (assoc db :logged-user value)))
 
 (rf/reg-event-fx
  :get-logged-user

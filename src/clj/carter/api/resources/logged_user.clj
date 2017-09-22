@@ -13,11 +13,16 @@
 ;; limitations under the License.
 
 (ns carter.api.resources.logged-user
-  (:require [carter.model.logged-user :as model]))
+  (:require [carter.dates :as d]
+            [carter.model.logged-user :as model]))
 
 (defn get-data
   "Get :id, :username and :screename of the user identified by `user-id`."
   [user-id]
   (let [user (model/find-by-id user-id)
-        {id :id username :username screen-name :screen_name} user]
-    {:id id :username username :screen-name screen-name}))
+        {id :id username :username
+         screen-name :screen_name last-update :last_update} user]
+    {:id id
+     :username username
+     :screen-name screen-name
+     :last-update (d/orient-date->ui-date last-update)}))

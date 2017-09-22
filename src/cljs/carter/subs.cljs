@@ -43,7 +43,7 @@
    (:loading db)))
 
 (rf/reg-sub-raw
- :logged-user-screen-name
+ :logged-user
  (fn [db _]
    (rf/dispatch [:get-logged-user])
-   (r/reaction (get @db :logged-user-screen-name))))
+   (r/reaction (get @db :logged-user))))

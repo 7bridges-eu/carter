@@ -30,8 +30,14 @@
     (.format orient-date-format date)))
 
 (defn java-date->orient-date
-  "Format a java.util.Date to a string with a format suitable for OrientDB
-  datetime properties."
+  "Format a java.util.Date `java-date` to a string with a format suitable for
+  OrientDB datetime properties."
   [java-date]
   (let [orient-date-format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")]
     (.format orient-date-format java-date)))
+
+(defn orient-date->ui-date
+  "Format `orient-date` from OrientDB to a string to be displayed client-side."
+  [orient-date]
+  (let [ui-date-format (SimpleDateFormat. "HH:mm:ss dd-MM-yyyy")]
+    (.format ui-date-format orient-date)))
