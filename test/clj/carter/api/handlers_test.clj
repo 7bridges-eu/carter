@@ -26,10 +26,10 @@
             [ring.mock.request :as mock]))
 
 (facts "Test API endpoints"
-       (fact "Testing get hashtags with tweet count endpoint"
+       (fact "Testing find top 10 hashtags"
              (with-redefs [twitter/logged-user-id (fn [] [])
-                           h/hashtags-with-tweets-count (fn [tweet-count id] id)]
-               (let [request (mock/request :get "/api/hashtag/tweet/1")
+                           h/find-top-10-hashtags (fn [id] id)]
+               (let [request (mock/request :get "/api/hashtag/tweet")
                      response (http/app request)]
                  (:status response) => 200)))
        (fact "Testing find tweet by hashtag endpoint"

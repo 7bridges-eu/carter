@@ -28,6 +28,6 @@
                (let [params ["test1" "test2"]]
                  (r/save-hashtags params) =>
                  [{:name "test1"} {:name "test2"}])))
-       (fact "get-hashtag-with-tweet-count requires logged-user-id and tweet-count"
-             (with-redefs [m/find-tweet-count (fn [tweet-count id] [])]
-               (r/hashtags-with-tweets-count 1 "test") => [])))
+       (fact "find-top-10-hashtags requires logged-user-id as parameter"
+             (with-redefs [m/find-top-10-hashtags (fn [id] [])]
+               (r/find-top-10-hashtags "test") => [])))
