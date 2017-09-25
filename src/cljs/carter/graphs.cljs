@@ -139,14 +139,6 @@
     :component-did-update #(graph-did-update)}))
 
 ;;; Nodes graph
-(defn nodes-links
-  []
-  @(rf/subscribe [:nodes-links]))
-
-(defn nodes-clj->nodes-js
-  []
-  (clj->js (nodes-links)))
-
 (defn nodes-graph-render
   []
   [:div
@@ -156,16 +148,114 @@
     {:width  graph-width
      :height graph-height}]])
 
-(defn nodes-enter
-  [])
+(defn initialize-svg
+  []
+  (-> (js/d3.select "svg")
+      (.append "defs")
+      (.append "marker")
+      (.attr "id" "arrowhead")
+      (.attr "viewBox""-0 -5 10 10")
+      (.attr "refX" 13)
+      (.attr "refY" 0)
+      (.attr "orient" "auto")
+      (.attr "markerWidth" 13)
+      (.attr "markerHeight" 13)
+      (.attr "xoverflow" "visible")
+      (.append "svg:path")
+      (.attr "d" "M 0,-5 L 10 ,0 L 0,5")
+      (.attr "fill" "#999")
+      (.style "stroke" "none")))
 
-(defn nodes-exit
-  [])
+(defn simulation
+  []
+  (-> (js/d3.forceSimulation)
+      (.force "link" (-> (js/d3.forceLink)
+                         (.id (fn [d] (.-id d)))
+                         (.distance 100)
+                         (.strength 1)))
+      (.force "charge" (js/d3.forceManyBody))
+      (.force "center" (js/d3.forceCenter (/ graph-width 2)
+                                          (/ graph-height 2)))))
+
+(defn link
+  [links]
+  (-> (js/d3.select "svg")
+      (.selectAll ".link")
+      (.data links)
+      .enter
+      (.append "line")
+      (.attr "class" "link")
+      (.attr "marker-end" "url(#arrowhead)")
+      (.append "title")
+      (.text (fn [d] (.-type d)))))
+
+(defn edge-paths
+  [links]
+  (-> (js/d3.select "svg")
+      (.selectAll ".edgepath")
+      (.data links)
+      .enter
+      (.append "path")
+      (.attrs {"class" "edgepath"
+               "fill-opacity" 0
+               "stroke-opacity" 0
+               "id" (fn [d i] (str "edgepath" i))})
+      (.style "pointer-events" "none")))
+
+(defn edge-labels
+  [links]
+  (-> (js/d3.select "svg")
+      (.selectAll ".edgelabel")
+      (.data links)
+      .enter
+      (.append "text")
+      (.style "pointer-events" "none")
+      (.attrs {"class" "edgelabel"
+               "id" (fn [d i] (str "edgelabel" i))
+               "font-size" 10
+               "fill" "#aaa"})
+      (.append "textPath")
+      (.attr "xlink:href" (fn [d i] (str "edgepath" i)))
+      (.style "text-anchor" "middle")
+      (.style "pointer-events" "none")
+      (.attr "startOffset" "50%")
+      (.text (fn [d] (.-type d)))))
+
+(defn node
+  [nodes]
+  (-> (js/d3.select "svg")
+      (.selectAll ".node")
+      (.data nodes)
+      .enter
+      (.append "g")
+      (.attr "class" "node")
+      (.append "circle")
+      (.attr "r" 5)
+      (.style "fill" (fn [_] (nth (.-schemeCategory20c js/d3) (rand-int 20))))
+      (.append "title")
+      (.text (fn [d] (.-id d)))
+      (.append "text")
+      (.attr "dy" -3)
+      (.text (fn [d] (str (.-name d) ":" (.-label d))))))
+
+(defn nodes-update
+  []
+  (let [nodes-links @(rf/subscribe [:nodes-links])]
+    (when-not (empty? nodes-links)
+      (let [{nodes :nodes links :links} nodes-links]
+        (-> (simulation)
+            (.nodes nodes)
+            (.force "link")
+            (.links links))))))
+
+(defn nodes-enter
+  []
+  (initialize-svg)
+  (nodes-update))
 
 (defn nodes-did-update
   []
-  (nodes-enter)
-  (nodes-exit))
+  (nodes-enter))
 
 (defn nodes-did-mount
   []
