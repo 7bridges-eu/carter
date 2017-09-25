@@ -16,12 +16,12 @@
   (:require [carter.services.orientdb :as db]))
 
 (def graph-query
-  "select loggeduser.@rid as loggeduser_rid,
+  "SELECT loggeduser.@rid as loggeduser_rid,
        loggeduser.screen_name as loggeduser_name,
        user.@rid as user_rid, user.screen_name as user_name,
        tweet.@rid as tweet_rid, tweet.text as tweet_text,
        hashtag.@rid as hashtag_rid, hashtag.name as hashtag_name
-   from (
+   FROM (
     MATCH {class: Hashtag, as: hashtag,
            where: (@rid in
             (SELECT H.@rid as hashtag,
@@ -41,8 +41,8 @@
     .inV('Tweet')
     .inE('Sees')
     .outV('LoggedUser'){as: loggeduser}
-    return hashtag, tweet, user, loggeduser)
-  where loggeduser.id != user.id")
+    RETURN hashtag, tweet, user, loggeduser)
+  WHERE loggeduser.id != user.id")
 
 (defn graph-data
   "Get the data necessary to create the relations graph for `logged-user-id`."
