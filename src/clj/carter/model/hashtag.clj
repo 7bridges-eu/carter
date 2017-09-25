@@ -28,18 +28,15 @@
                      .inV(){as: hashtag,
                             where: ($matched.user != $currentMatch)}
                     RETURN hashtag)"
-   :find-top-10-hashtags "select hashtag, tweets from (
-                           select hashtag.name as hashtag,
-                                  count(tweet) as tweets,
-                                  tweet.created_at as dt from (
-                             MATCH {class: Hashtag, as: hashtag}
-                             .inE('Has'){as: has, where: (logged_user_id = %s)}
-                             .outV('Tweet'){as: tweet}
-                             RETURN hashtag, tweet)
-                           group by hashtag
-                           order by dt desc)
-                          order by tweets desc
-                          limit 10"})
+   :find-top-10-hashtags "SELECT H.name as hashtag,
+                                list(T).size() as tweets FROM (
+                           MATCH {class: Hashtag, as: H}
+                            .inE('Has'){where: (logged_user_id = %s)}
+                            .outV('Tweet'){as: T}
+                           RETURN H, T)
+                          GROUP BY H.name
+                          ORDER BY T.created_at desc, tweets desc
+                          LIMIT 10"})
 
 (def update-queries
   {:update-by-rid "update :rid set name = :name"})

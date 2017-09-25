@@ -16,32 +16,32 @@
   (:require [carter.services.orientdb :as db]))
 
 (def graph-query
-  "select loggeduser.screen_name, user.screen_name, tweet.text, hashtag.name
+  "select loggeduser.@rid as loggeduser_rid,
+       loggeduser.screen_name as loggeduser_name,
+       user.@rid as user_rid, user.screen_name as user_name,
+       tweet.@rid as tweet_rid, tweet.text as tweet_text,
+       hashtag.@rid as hashtag_rid, hashtag.name as hashtag_name
    from (
     MATCH {class: Hashtag, as: hashtag,
            where: (@rid in
-            (select hashtag.@rid from
-              (select hashtag, tweets from (
-                           select hashtag as hashtag,
-                                  count(tweet) as tweets,
-                                  tweet.created_at as dt from (
-                             MATCH {class: Hashtag, as: hashtag}
-                             .inE('Has'){as: has, where: (logged_user_id = %s)}
-                             .outV('Tweet'){as: tweet}
-                             RETURN hashtag, tweet)
-                           group by hashtag
-                           order by dt desc)
-                          order by tweets desc
-                          limit 10)))}
-  .inE('Has'){as: has, where: (logged_user_id = %s)}
-  .outV('Tweet'){as: tweet}
-  .inE('Tweeted'){as: tweeted, where: (logged_user_id = %s)}
-  .outV('User'){as: user}
-  .outE('Tweeted'){where: (logged_user_id = %s)}
-  .inV('Tweet')
-  .inE('Sees')
-  .outV('LoggedUser'){as: loggeduser}
-  return hashtag, tweet, user, loggeduser)
+            (SELECT H.@rid as hashtag,
+               list(T).size() as tweets FROM (
+                MATCH {class: Hashtag, as: H}
+                 .inE('Has'){where: (logged_user_id = %s)}
+                 .outV('Tweet'){as: T}
+                RETURN H, T)
+                GROUP BY H.@rid
+                ORDER BY T.created_at desc, tweets desc
+                LIMIT 10))}
+    .inE('Has'){as: has, where: (logged_user_id = %s)}
+    .outV('Tweet'){as: tweet}
+    .inE('Tweeted'){as: tweeted, where: (logged_user_id = %s)}
+    .outV('User'){as: user}
+    .outE('Tweeted'){where: (logged_user_id = %s)}
+    .inV('Tweet')
+    .inE('Sees')
+    .outV('LoggedUser'){as: loggeduser}
+    return hashtag, tweet, user, loggeduser)
   where loggeduser.id != user.id")
 
 (defn graph-data
