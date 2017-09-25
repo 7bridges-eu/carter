@@ -196,10 +196,10 @@
       (.data links)
       .enter
       (.append "path")
-      (.attrs {"class" "edgepath"
-               "fill-opacity" 0
-               "stroke-opacity" 0
-               "id" (fn [d i] (str "edgepath" i))})
+      (.attr "class" "edgepath")
+      (.attr "fill-opacity" 0)
+      (.attr "stroke-opacity" 0)
+      (.attr "id" (fn [d i] (str "edgepath" i)))
       (.style "pointer-events" "none")))
 
 (defn edge-labels
@@ -210,10 +210,10 @@
       .enter
       (.append "text")
       (.style "pointer-events" "none")
-      (.attrs {"class" "edgelabel"
-               "id" (fn [d i] (str "edgelabel" i))
-               "font-size" 10
-               "fill" "#aaa"})
+      (.attr "class" "edgelabel")
+      (.attr "id" (fn [d i] (str "edgelabel" i)))
+      (.attr "font-size" 10)
+      (.attr "fill" "#aaa")
       (.append "textPath")
       (.attr "xlink:href" (fn [d i] (str "edgepath" i)))
       (.style "text-anchor" "middle")
@@ -238,15 +238,45 @@
       (.attr "dy" -3)
       (.text (fn [d] (str (.-name d) ":" (.-label d))))))
 
+(defn ticked
+  [links nodes]
+  (let [link (link links)
+        node (node nodes)
+        edgepaths (edge-paths links)
+        edgelabels (edge-labels links)]
+    (-> link
+        (.attr "x1" (fn [d] (.-x (.-source d))))
+        (.attr "y1" (fn [d] (.-y (.-source d))))
+        (.attr "x2" (fn [d] (.-x (.-target d))))
+        (.attr "y2" (fn [d] (.-y (.-target d)))))
+    (-> node
+        (.attr "transform" (fn [d]
+                             (str "translate(" (.-x d) "," (.-y d) ")"))))
+    (-> edgepaths
+        (.attr "d" (fn [d]
+                     (str "M " (.-x (.-source d)) " " (.-y (.-source d))
+                          " L " (.-x (.-target d)) " " (.-y (.-target d))))))
+    (-> edgelabels
+        (.attr "transform" (fn [d]
+                             (if (< (.-x (.-target d)) (.-x (.-source d)))
+                               (let [bbox (.getBBox js/this)
+                                     rx (/ (+ (.-x bbox) (.-width bbox)) 2)
+                                     ry (/ (+ (.-y bbox) (.-height bbox)) 2)]
+                                 (str "rotate(180" rx " " ry ")"))
+                               "rotate(0)"))))))
+
 (defn nodes-update
   []
   (let [nodes-links @(rf/subscribe [:nodes-links])]
     (when-not (empty? nodes-links)
-      (let [{nodes :nodes links :links} nodes-links]
+      (let [{nodes :nodes links :links} nodes-links
+            ns (clj->js nodes)
+            ls (clj->js links)]
         (-> (simulation)
-            (.nodes nodes)
+            (.nodes ns)
+            (.on "tick" (ticked ls ns))
             (.force "link")
-            (.links links))))))
+            (.links ls))))))
 
 (defn nodes-enter
   []
