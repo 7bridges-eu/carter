@@ -7,8 +7,8 @@
   :dependencies
   [;; Clojure
    [clj-time "0.14.0"]
-   [org.clojars.7bridges/clj-odbp "0.1.0"]
    [com.taoensso/timbre "4.10.0"]
+   [eu.7bridges/clj-odbp "0.2.0"]
    [hiccup "1.0.5"]
    [http-kit "2.2.0"]
    [metosin/compojure-api "1.1.10"]
