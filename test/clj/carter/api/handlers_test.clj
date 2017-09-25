@@ -14,6 +14,7 @@
 
 (ns carter.api.handlers-test
   (:require [carter.api.resources
+             [graph :as g]
              [hashtag :as h]
              [logged-user :as lu]
              [tweet :as t]
@@ -54,5 +55,11 @@
              (with-redefs [twitter/logged-user-id (fn [] [])
                            lu/get-data (fn [id] id)]
                (let [request (mock/request :get "/api/logged-user/data")
+                     response (http/app request)]
+                 (:status response) => 200)))
+       (fact "Testing get graph data endpoint"
+             (with-redefs [twitter/logged-user-id (fn [] [])
+                           g/graph-data (fn [id] id)]
+               (let [request (mock/request :get "/api/graph/data")
                      response (http/app request)]
                  (:status response) => 200))))

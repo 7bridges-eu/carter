@@ -14,11 +14,13 @@
 
 (ns carter.api.handlers
   (:require [carter.api.resources
+             [graph :as r.graph]
              [hashtag :as r.hashtag]
              [logged-user :as r.logged-user]
              [tweet :as r.tweet]
              [twitter :as r.twitter]]
             [carter.api.schemas
+             [graph :as s.graph]
              [hashtag :as s.hashtag]
              [logged-user :as s.logged-user]
              [tweet :as s.tweet]
@@ -84,4 +86,13 @@
             :return [s.logged-user/user-response]
             :summary "returns logged user data"
             (let [logged-user-id (get-in req [:cookies "user-id" :value])]
-              (response/ok (r.logged-user/get-data logged-user-id))))))
+              (response/ok (r.logged-user/get-data logged-user-id)))))
+
+  (api/context
+   "/api/graph" []
+   :tags ["operations"]
+   (api/GET "/data" req
+            :return [s.graph/graph-data-response]
+            :summary "returns data for the relationships graph"
+            (let [logged-user-id (get-in req [:cookies "user-id" :value])]
+              (response/ok (r.graph/graph-data logged-user-id))))))
