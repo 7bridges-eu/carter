@@ -44,3 +44,25 @@
                       [:bad-response])
     :dispatch [:get-logged-user]
     :db (assoc db :loading false))))
+
+(rf/reg-event-db
+ :show-relations-graph
+ (fn [db [_ value]]
+   (if value
+     (assoc db :show-relations-graph false)
+     (assoc db :show-relations-graph true))))
+
+(rf/reg-event-db
+ :load-nodes-links
+ (fn [db [_ value]]
+   (assoc db :nodes-links value)))
+
+(rf/reg-event-fx
+ :get-nodes-links
+ (fn [{db :db} _]
+   (assoc
+    (ajax/get-request "/api/graph/data"
+                      [:load-nodes-links]
+                      [:bad-response])
+    :dispatch [:get-logged-user]
+    :db (assoc db :loading false))))

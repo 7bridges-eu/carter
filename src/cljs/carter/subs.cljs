@@ -47,3 +47,14 @@
  (fn [db _]
    (rf/dispatch [:get-logged-user])
    (r/reaction (get @db :logged-user))))
+
+(rf/reg-sub
+ :show-relations-graph
+ (fn [db _]
+   (:show-relations-graph db)))
+
+(rf/reg-sub-raw
+ :nodes-links
+ (fn [db _]
+   (rf/dispatch [:get-nodes-links])
+   (r/reaction (get @db :nodes-links))))
