@@ -54,7 +54,7 @@
             {:on-click #(rf/dispatch [:show-relations-graph
                                       @show-relations-graph?])}
             (if @show-relations-graph?
-              "Hide relations graph"
+              "Display hashtags graph"
               "Display relations graph")]]
           [:div
            {:style {:text-align "center"}}
