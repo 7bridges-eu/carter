@@ -149,9 +149,9 @@
      :height graph-height}]])
 
 (defn simulation
-  []
-  (-> (js/d3.forceSimulation)
-      (.force "link" (-> (js/d3.forceLink)
+  [nodes links]
+  (-> (js/d3.forceSimulation nodes)
+      (.force "link" (-> (js/d3.forceLink links)
                          (.id (fn [d] (.-id d)))
                          (.distance 100)
                          (.strength 1)))
@@ -207,7 +207,7 @@
       (let [{ns :nodes ls :links} nodes-links
             nodes-js (clj->js ns)
             links-js (clj->js ls)
-            sim (simulation)]
+            sim (simulation nodes-js links-js)]
         (.nodes sim nodes-js)
         (-> sim
             (.force "link")
