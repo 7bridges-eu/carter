@@ -116,7 +116,7 @@
 
 (defn graph-render
   []
-  (-> (js/d3.select "#graph svg")
+  (-> (js/d3.select "svg")
       .remove)
   [:div
    {:id "graph"}
