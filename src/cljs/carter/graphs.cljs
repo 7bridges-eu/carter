@@ -96,7 +96,7 @@
 (defn circles-exit
   []
   (let [data (get-data)]
-    (-> (js/d3.select "#graph svg .container .circles")
+    (-> (js/d3.select "svg")
         (.selectAll "circle")
         (.data (clj->js data))
         .exit
@@ -109,13 +109,15 @@
 
 (defn circles-did-mount
   []
-  (-> (js/d3.select "#graph svg .container")
+  (-> (js/d3.select "svg")
       (.append "g")
       (.attr "class" "circles"))
   (circles-did-update))
 
 (defn graph-render
   []
+  (-> (js/d3.select "#graph svg")
+      .remove)
   [:div
    {:id "graph"}
 
@@ -139,15 +141,6 @@
     :component-did-update #(graph-did-update)}))
 
 ;;; Nodes graph
-(defn nodes-graph-render
-  []
-  [:div
-   {:id "nodes-graph"}
-
-   [:svg
-    {:width  graph-width
-     :height graph-height}]])
-
 (defn initialize-svg
   []
   (-> (js/d3.select "svg")
@@ -232,15 +225,15 @@
         (.attr "class" "node")
         (.call (-> (js/d3.drag)
                    (.on "start" (fn [d]
-                                  (when (false? (.-active (js/d3.event)))
+                                  (when (false? (.-active js/d3.event))
                                     (-> simulation
                                         (.alphaTarget 0.3)
                                         .restart))
                                   (set! (.-fx d) (.-x d))
                                   (set! (.-fy d) (.-y d))))
                    (.on "drag" (fn [d]
-                                 (set! (.-fx d) (.-x (js/d3.event)))
-                                 (set! (.-fy d) (.-y (js/d3.event)))))))
+                                 (set! (.-fx d) (.-x js/d3.event))
+                                 (set! (.-fy d) (.-y js/d3.event))))))
         (.append "circle")
         (.attr "r" 15)
         (.style "fill" (fn [_] (nth (.-schemeCategory20c js/d3) (rand-int 20))))
@@ -322,7 +315,7 @@
 
 (defn nodes-did-mount
   []
-  (-> (js/d3.select "#nodes-graph svg .container")
+  (-> (js/d3.select "svg")
       (.append "g")
       (.attr "class" "nodes"))
   (nodes-did-update))
@@ -338,6 +331,6 @@
 (defn nodes-graph
   []
   (reagent/create-class
-   {:reagent-render       #(nodes-graph-render)
+   {:reagent-render       #(graph-render)
     :component-did-mount  #(nodes-graph-did-mount)
     :component-did-update #(nodes-graph-did-update)}))
