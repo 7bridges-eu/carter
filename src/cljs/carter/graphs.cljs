@@ -266,15 +266,17 @@
   (let [nodes-links @(rf/subscribe [:nodes-links])]
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
-            links (build-links (clj->js ls))
-            nodes (build-nodes (clj->js ns))
-            edgepaths (build-edge-paths (clj->js ls))
-            edgelabels (build-edge-labels (clj->js ls))]
+            nodes-js (clj->js ns)
+            links-js (clj->js ls)
+            links (build-links links-js)
+            nodes (build-nodes nodes-js)
+            edgepaths (build-edge-paths links-js)
+            edgelabels (build-edge-labels links-js)]
         (-> (simulation)
-            (.nodes (clj->js ns))
+            (.nodes nodes-js)
             (.on "tick" (ticked links nodes edgepaths edgelabels))
             (.force "link")
-            (.links (clj->js ls)))))))
+            (.links links-js))))))
 
 (defn nodes-enter
   []
