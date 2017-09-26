@@ -174,8 +174,8 @@
                          (.distance 100)
                          (.strength 1)))
       (.force "charge" (js/d3.forceManyBody))
-      (.force "center" (js/d3.forceCenter (/ graph-width 2)
-                                          (/ graph-height 2)))))
+      (.force "center"
+              (js/d3.forceCenter (/ graph-width 2) (/ graph-height 2)))))
 
 (defn build-links
   [links]
@@ -185,40 +185,7 @@
       .enter
       (.append "line")
       (.attr "class" "link")
-      (.attr "marker-end" "url(#arrowhead)")
       (.append "title")
-      (.text (fn [d] (.-type d)))))
-
-(defn build-edge-paths
-  [links]
-  (-> (js/d3.select "svg")
-      (.selectAll ".edgepath")
-      (.data links)
-      .enter
-      (.append "path")
-      (.attr "class" "edgepath")
-      (.attr "fill-opacity" 0)
-      (.attr "stroke-opacity" 0)
-      (.attr "id" (fn [d i] (str "edgepath" i)))
-      (.style "pointer-events" "none")))
-
-(defn build-edge-labels
-  [links]
-  (-> (js/d3.select "svg")
-      (.selectAll ".edgelabel")
-      (.data links)
-      .enter
-      (.append "text")
-      (.style "pointer-events" "none")
-      (.attr "class" "edgelabel")
-      (.attr "id" (fn [d i] (str "edgelabel" i)))
-      (.attr "font-size" 10)
-      (.attr "fill" "#aaa")
-      (.append "textPath")
-      (.attr "xlink:href" (fn [d i] (str "#edgepath" i)))
-      (.style "text-anchor" "middle")
-      (.style "pointer-events" "none")
-      (.attr "startOffset" "50%")
       (.text (fn [d] (.-type d)))))
 
 (defn build-nodes
@@ -229,32 +196,19 @@
       .enter
       (.append "g")
       (.attr "class" "node")
-      (.call (-> (js/d3.drag)
-                 (.on "start" (fn [d]
-                                (if (false? (.active (js/d3.event)))
-                                  (-> simulation
-                                      (.alphaTarget 0.3)
-                                      .restart))
-                                (set! (.-fx d) (.-x d))
-                                (set! (.-fy d) (.-y d))))
-                 (.on "drag" (fn [d]
-                               (set! (.-fx d) (.-x (js/d3.event)))
-                               (set! (.-fy d) (.-y (js/d3.event)))))))
       (.append "circle")
-      (.attr "r" 5)
+      (.attr "r" 15)
       (.style "fill" (fn [_] (nth (.-schemeCategory20c js/d3) (rand-int 20))))
       (.append "title")
       (.text (fn [d] (.-id d)))
       (.append "text")
       (.attr "dy" -3)
-      (.text (fn [d] (str (.-name d) ":" (.-label d))))))
+      (.text (fn [d] (str (.-name d) ": " (.-label d))))))
 
 (defn ticked
   [link node]
   (let [link (build-links link)
-        node (build-nodes node)
-        edgepaths (build-edge-paths link)
-        edgelabels (build-edge-labels link)]
+        node (build-nodes node)]
     (-> link
         (.attr "x1" (fn [d] (.-x (.-source d))))
         (.attr "y1" (fn [d] (.-y (.-source d))))
@@ -262,20 +216,7 @@
         (.attr "y2" (fn [d] (.-y (.-target d)))))
     (-> node
         (.attr "transform" (fn [d]
-                             (str "translate(" (.-x d) "," (.-y d) ")"))))
-    (-> edgepaths
-        (.attr "d" (fn [d]
-                     (str "M " (.-x (.-source d)) " " (.-y (.-source d))
-                          " L " (.-x (.-target d)) " " (.-y (.-target d))))))
-    (-> edgelabels
-        (.attr "transform" (fn [d]
-                             (this-as this
-                               (if (< (.-x (.-target d)) (.-x (.-source d)))
-                                 (let [bbox (.getBBox this)
-                                       rx (/ (+ (.-x bbox) (.-width bbox)) 2)
-                                       ry (/ (+ (.-y bbox) (.-height bbox)) 2)]
-                                   (str "rotate(180" rx " " ry ")"))
-                                 "rotate(0)")))))))
+                             (str "translate(" (.-x d) "," (.-y d) ")"))))))
 
 (defn nodes-update
   []
@@ -283,12 +224,15 @@
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
             nodes-js (clj->js ns)
-            links-js (clj->js ls)]
-        (-> (simulation)
-            (.nodes nodes-js)
-            (.on "tick" #(ticked links-js nodes-js))
+            links-js (clj->js ls)
+            sim (simulation)]
+        (-> sim
+            (.nodes nodes-js))
+        (-> sim
             (.force "link")
-            (.links links-js))))))
+            (.links links-js))
+        (-> sim
+            (.on "tick" #(ticked links-js nodes-js)))))))
 
 (defn nodes-enter
   []
