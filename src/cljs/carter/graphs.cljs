@@ -226,13 +226,11 @@
             nodes-js (clj->js ns)
             links-js (clj->js ls)
             sim (simulation)]
-        (-> sim
-            (.nodes nodes-js))
+        (.nodes sim nodes-js)
         (-> sim
             (.force "link")
             (.links links-js))
-        (-> sim
-            (.on "tick" #(ticked links-js nodes-js)))))))
+        (.on sim "tick" #(ticked links-js nodes-js))))))
 
 (defn nodes-enter
   []
