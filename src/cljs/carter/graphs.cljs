@@ -237,9 +237,28 @@
   (initialize-svg)
   (nodes-update))
 
+(defn nodes-exit
+  []
+  (let [nodes-links @(rf/subscribe [:nodes-links])]
+    (when-not (empty? nodes-links)
+      (let [{ns :nodes ls :links} nodes-links
+            nodes (clj->js ns)
+            links (clj->js ls)]
+        (-> (js/d3.select "svg")
+            (.selectAll ".node")
+            (.data nodes)
+            .exit
+            .remove)
+        (-> (js/d3.select "svg")
+            (.selectAll ".link")
+            (.data links)
+            .exit
+            .remove)))))
+
 (defn nodes-did-update
   []
-  (nodes-enter))
+  (nodes-enter)
+  (nodes-exit))
 
 (defn nodes-did-mount
   []
