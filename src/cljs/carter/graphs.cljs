@@ -177,7 +177,7 @@
       (.force "center" (js/d3.forceCenter (/ graph-width 2)
                                           (/ graph-height 2)))))
 
-(defn link
+(defn build-links
   [links]
   (-> (js/d3.select "svg")
       (.selectAll ".link")
@@ -189,7 +189,7 @@
       (.append "title")
       (.text (fn [d] (.-type d)))))
 
-(defn edge-paths
+(defn build-edge-paths
   [links]
   (-> (js/d3.select "svg")
       (.selectAll ".edgepath")
@@ -202,7 +202,7 @@
       (.attr "id" (fn [d i] (str "edgepath" i)))
       (.style "pointer-events" "none")))
 
-(defn edge-labels
+(defn build-edge-labels
   [links]
   (-> (js/d3.select "svg")
       (.selectAll ".edgelabel")
@@ -221,7 +221,7 @@
       (.attr "startOffset" "50%")
       (.text (fn [d] (.-type d)))))
 
-(defn node
+(defn build-nodes
   [nodes]
   (-> (js/d3.select "svg")
       (.selectAll ".node")
@@ -266,10 +266,10 @@
   (let [nodes-links @(rf/subscribe [:nodes-links])]
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
-            links (link (clj->js ls))
-            nodes (node (clj->js ns))
-            edgepaths (edge-paths (clj->js ls))
-            edgelabels (edge-labels (clj->js ls))]
+            links (build-links (clj->js ls))
+            nodes (build-nodes (clj->js ns))
+            edgepaths (build-edge-paths (clj->js ls))
+            edgelabels (build-edge-labels (clj->js ls))]
         (-> (simulation)
             (.nodes (clj->js ns))
             (.on "tick" (ticked links nodes edgepaths edgelabels))
