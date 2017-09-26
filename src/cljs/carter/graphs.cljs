@@ -148,6 +148,24 @@
     {:width  graph-width
      :height graph-height}]])
 
+(defn initialize-svg
+  []
+  (-> (js/d3.select "svg")
+      (.append "defs")
+      (.append "marker")
+      (.attr "id" "arrowhead")
+      (.attr "viewBox""-0 -5 10 10")
+      (.attr "refX" 13)
+      (.attr "refY" 0)
+      (.attr "orient" "auto")
+      (.attr "markerWidth" 13)
+      (.attr "markerHeight" 13)
+      (.attr "xoverflow" "visible")
+      (.append "svg:path")
+      (.attr "d" "M 0,-5 L 10 ,0 L 0,5")
+      (.attr "fill" "#999")
+      (.style "stroke" "none")))
+
 (defn simulation
   [nodes links]
   (-> (js/d3.forceSimulation nodes)
@@ -205,17 +223,20 @@
   (let [nodes-links @(rf/subscribe [:nodes-links])]
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
-            nodes-js (clj->js ns)
-            links-js (clj->js ls)
-            sim (simulation nodes-js links-js)]
-        (.nodes sim nodes-js)
+            nodes (clj->js ns)
+            links (clj->js ls)
+            sim (simulation nodes links)]
+        (-> sim
+            (.nodes nodes))
         (-> sim
             (.force "link")
-            (.links links-js))
-        (.on sim "tick" #(ticked links-js nodes-js))))))
+            (.links links))
+        (-> sim
+            (.on "tick" #(ticked links nodes)))))))
 
 (defn nodes-enter
   []
+  (initialize-svg)
   (nodes-update))
 
 (defn nodes-exit
