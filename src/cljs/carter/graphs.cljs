@@ -215,7 +215,7 @@
       (.attr "font-size" 10)
       (.attr "fill" "#aaa")
       (.append "textPath")
-      (.attr "xlink:href" (fn [d i] (str "edgepath" i)))
+      (.attr "xlink:href" (fn [d i] (str "#edgepath" i)))
       (.style "text-anchor" "middle")
       (.style "pointer-events" "none")
       (.attr "startOffset" "50%")
@@ -269,12 +269,13 @@
                           " L " (.-x (.-target d)) " " (.-y (.-target d))))))
     (-> edgelabels
         (.attr "transform" (fn [d]
-                             (if (< (.-x (.-target d)) (.-x (.-source d)))
-                               (let [bbox (.getBBox js/this)
-                                     rx (/ (+ (.-x bbox) (.-width bbox)) 2)
-                                     ry (/ (+ (.-y bbox) (.-height bbox)) 2)]
-                                 (str "rotate(180" rx " " ry ")"))
-                               "rotate(0)"))))))
+                             (this-as this
+                               (if (< (.-x (.-target d)) (.-x (.-source d)))
+                                 (let [bbox (.getBBox this)
+                                       rx (/ (+ (.-x bbox) (.-width bbox)) 2)
+                                       ry (/ (+ (.-y bbox) (.-height bbox)) 2)]
+                                   (str "rotate(180" rx " " ry ")"))
+                                 "rotate(0)")))))))
 
 (defn nodes-update
   []
