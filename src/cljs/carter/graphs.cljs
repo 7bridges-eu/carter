@@ -116,8 +116,6 @@
 
 (defn graph-render
   []
-  (-> (js/d3.select "svg")
-      .remove)
   [:div
    {:id "graph"}
 
@@ -136,7 +134,8 @@
 (defn circles-graph
   []
   (reagent/create-class
-   {:reagent-render       #(graph-render)
+   {:display-name         "circles-graph"
+    :reagent-render       #(graph-render)
     :component-did-mount  #(graph-did-mount)
     :component-did-update #(graph-did-update)}))
 
@@ -331,6 +330,7 @@
 (defn nodes-graph
   []
   (reagent/create-class
-   {:reagent-render       #(graph-render)
+   {:display-name         "nodes-graph"
+    :reagent-render       #(graph-render)
     :component-did-mount  #(nodes-graph-did-mount)
     :component-did-update #(nodes-graph-did-update)}))
