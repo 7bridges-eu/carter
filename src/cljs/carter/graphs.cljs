@@ -146,7 +146,7 @@
       (.append "defs")
       (.append "marker")
       (.attr "id" "arrowhead")
-      (.attr "viewBox""-0 -5 10 10")
+      (.attr "viewBox" "-0 -5 10 10")
       (.attr "refX" 13)
       (.attr "refY" 0)
       (.attr "orient" "auto")
@@ -267,7 +267,7 @@
                                  (let [bbox (.getBBox this)
                                        rx (/ (+ (.-x bbox) (.-width bbox)) 2)
                                        ry (/ (+ (.-y bbox) (.-height bbox)) 2)]
-                                   (str "rotate(180" rx " " ry ")"))
+                                   (str "rotate(180 " rx " " ry ")"))
                                  "rotate(0)")))))))
 
 (defn nodes-update
