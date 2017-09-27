@@ -27,7 +27,8 @@
      {:name "viewport"
       :content "width=device-width, initial-scale=1.0, maximum-scale=1.0"}]
     [:title "carter"]
-    (hiccup/include-css "css/semantic.min.css")]
+    (hiccup/include-css "css/semantic.min.css"
+                        "css/custom.css")]
    [:body
     [:div#app]
     (hiccup/include-js "js/main.js")
