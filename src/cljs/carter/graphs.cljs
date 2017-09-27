@@ -46,7 +46,7 @@
 (defn create-circles
   "Create the node circles starting from `root` node."
   [root]
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#circles-graph svg")
       (.selectAll ".node")
       (.data (.leaves root))
       .enter
@@ -62,7 +62,7 @@
 (defn create-texts
   "Add hashtags to the circles."
   []
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#circles-graph svg")
       (.selectAll ".node")
       (.append "text")
       (.attr "dy" ".3em")
@@ -77,7 +77,7 @@
 (defn create-tooltips
   "Add hashtags as tooltips to every circle."
   []
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#circles-graph svg")
       (.selectAll ".node")
       (.append "title")
       (.text (fn [d]
@@ -96,7 +96,7 @@
 (defn circles-exit
   []
   (let [data (get-data)]
-    (-> (js/d3.select "svg")
+    (-> (js/d3.select "#circles-graph svg")
         (.selectAll "circle")
         (.data (clj->js data))
         .exit
@@ -109,15 +109,15 @@
 
 (defn circles-did-mount
   []
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#circles-graph svg")
       (.append "g")
       (.attr "class" "circles"))
   (circles-did-update))
 
 (defn graph-render
-  []
+  [graph-name]
   [:div
-   {:id "graph"}
+   {:id graph-name}
 
    [:svg
     {:width  graph-width
@@ -135,14 +135,14 @@
   []
   (reagent/create-class
    {:display-name         "circles-graph"
-    :reagent-render       #(graph-render)
+    :reagent-render       #(graph-render "circles-graph")
     :component-did-mount  #(graph-did-mount)
     :component-did-update #(graph-did-update)}))
 
 ;;; Nodes graph
 (defn initialize-svg
   []
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#nodes-graph svg")
       (.append "defs")
       (.append "marker")
       (.attr "id" "arrowhead")
@@ -171,7 +171,7 @@
 
 (defn build-links
   [links]
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#nodes-graph svg")
       (.selectAll ".link")
       (.data links)
       .enter
@@ -183,7 +183,7 @@
 
 (defn build-edge-paths
   [links]
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#nodes-graph svg")
       (.selectAll ".edgepath")
       (.data links)
       .enter
@@ -196,7 +196,7 @@
 
 (defn build-edge-labels
   [links]
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#nodes-graph svg")
       (.selectAll ".edgelabel")
       (.data links)
       .enter
@@ -216,7 +216,7 @@
 (defn build-nodes
   [nodes]
   (let [sim (simulation)]
-    (-> (js/d3.select "svg")
+    (-> (js/d3.select "#nodes-graph svg")
         (.selectAll ".node")
         (.data nodes)
         .enter
@@ -296,12 +296,12 @@
       (let [{ns :nodes ls :links} nodes-links
             nodes (clj->js ns)
             links (clj->js ls)]
-        (-> (js/d3.select "svg")
+        (-> (js/d3.select "#nodes-graph svg")
             (.selectAll ".node")
             (.data nodes)
             .exit
             .remove)
-        (-> (js/d3.select "svg")
+        (-> (js/d3.select "#nodes-graph svg")
             (.selectAll ".link")
             (.data links)
             .exit
@@ -314,7 +314,7 @@
 
 (defn nodes-did-mount
   []
-  (-> (js/d3.select "svg")
+  (-> (js/d3.select "#nodes-graph svg")
       (.append "g")
       (.attr "class" "nodes"))
   (nodes-did-update))
@@ -331,6 +331,6 @@
   []
   (reagent/create-class
    {:display-name         "nodes-graph"
-    :reagent-render       #(graph-render)
+    :reagent-render       #(graph-render "nodes-graph")
     :component-did-mount  #(nodes-graph-did-mount)
     :component-did-update #(nodes-graph-did-update)}))
