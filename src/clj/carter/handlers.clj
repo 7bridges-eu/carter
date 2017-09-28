@@ -28,6 +28,7 @@
   "Callback for Twitter API.
 
   If the user granted permission to carter:
+
   - save the first 150 tweets of her timeline
   - store her twitter id in the cookies as \"user-id\"
   - direct her to the homepage
@@ -60,6 +61,7 @@
   "Direct to \"/home\" only when:
 
   - \"user-id\" cookie is present
+  - the user has not revoked the permission
   - user data are already stored on the database
 
   Otherwise, redirect to \"Sign in\"."
