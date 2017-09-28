@@ -80,8 +80,8 @@
                            logged-user/update-by-rid (fn [t] t)]
                (t/update-last-update "test") => (contains {:rid anything})))
        (fact "save-user-tweets should accept and id and tweet-count"
-             (with-redefs [twitter/get-home-tweets (fn [tweet-count]
-                                                     tweets)
+             (with-redefs [twitter/home-tweets (fn [id tweet-count]
+                                                 tweets)
                            t/has-hashtags? (fn [ts] ts)
                            t/process-tweet (fn [t] t)
                            t/save-tweet (fn [id t] t)

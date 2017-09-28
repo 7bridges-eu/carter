@@ -45,7 +45,7 @@
                      response (http/app request)]
                  (:status response) => 200)))
        (fact "Testing get Twitter user approval URI endpoint"
-             (with-redefs [twitter/get-request-token (fn [])]
+             (with-redefs [twitter/request-token (fn [])]
                (let [request (mock/request :get "/api/twitter/user-approval")
                      response (http/app request)]
                  (:status response) => 302)))

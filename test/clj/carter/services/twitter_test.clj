@@ -13,16 +13,18 @@
 ;; limitations under the License.
 
 (ns carter.services.twitter-test
-  (:require [carter.services.twitter :as t]
+  (:require [carter.model.logged-user :as lu]
+            [carter.services.twitter :as t]
             [midje.sweet :refer :all]
             [twitter.api.restful :as r]))
 
 (facts "Twitter API interrogation"
-       (fact "get-home-tweets requires one argument 'tweet-count'"
-             (with-redefs [r/statuses-home-timeline
+       (fact "home-tweets requires one argument 'tweet-count'"
+             (with-redefs [lu/find-by-id (fn [id] [])
+                           r/statuses-home-timeline
                            (fn [& args]
                              (let [credentials (second (rest (rest args)))
                                    tweet-count (:count credentials)]
                                tweet-count))]
                (let [tweet-count 1]
-                 (t/get-home-tweets tweet-count) => 1))))
+                 (t/home-tweets "test "tweet-count) => 1))))
