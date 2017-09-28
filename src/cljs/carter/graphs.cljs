@@ -163,151 +163,76 @@
   (-> (js/d3.forceSimulation)
       (.force "link" (-> (js/d3.forceLink)
                          (.id (fn [d] (.-id d)))
-                         (.distance 300)))
+                         (.distance 100)))
       (.force "charge" (js/d3.forceManyBody))
       (.force "center"
               (js/d3.forceCenter (/ graph-width 2) (/ graph-height 2)))))
 
-(defn init-links
-  [links]
-  (-> (js/d3.select "#nodes-graph svg")
-      (.selectAll ".link")
-      (.data links)
-      .enter
-      (.append "line")
-      (.attr "class" "link")
-      (.attr "marker-end" "url(#arrowhead)")))
-
-(defn append-link-title
-  [links]
-  (-> links
-      (.append "title")
-      (.text (fn [d] (.-type d))))
-  links)
-
 (defn build-links
   [links]
-  (-> links
-      init-links
-      append-link-title))
+  (let [elements (-> (js/d3.select "#nodes-graph svg")
+                     (.append "g")
+                     (.attr "class" "link")
+                     (.selectAll "line")
+                     (.data links)
+                     (.enter)
+                     (.append "line")
+                     (.attr "stroke-width" (fn [d] 1))
+                     (.attr "stroke" (fn [d] "#000")))]
+    (-> elements
+        (.append "title")
+        (.text (fn [d] (.-type d))))
+    elements))
 
-(defn build-edge-paths
-  [links]
-  (-> (js/d3.select "#nodes-graph svg")
-      (.selectAll ".edgepath")
-      (.data links)
-      .enter
-      (.append "path")
-      (.attr "class" "edgepath")
-      (.attr "fill-opacity" 0)
-      (.attr "stroke-opacity" 0)
-      (.attr "id" (fn [d i] (str "edgepath" i)))
-      (.style "pointer-events" "none")))
-
-(defn init-edge-labels
-  [links]
-  (-> (js/d3.select "#nodes-graph svg")
-      (.selectAll ".edgelabel")
-      (.data links)
-      .enter
-      (.append "text")
-      (.style "pointer-events" "none")
-      (.attr "class" "edgelabel")
-      (.attr "id" (fn [d i] (str "edgelabel" i)))
-      (.attr "font-size" 10)
-      (.attr "fill" "#aaa")))
-
-(defn add-edge-labels-text-path
-  [edgelabels]
-  (-> edgelabels
-      (.append "textPath")
-      (.attr "xlink:href" (fn [d i] (str "#edgepath" i)))
-      (.style "text-anchor" "middle")
-      (.style "pointer-events" "none")
-      (.attr "startOffset" "50%")
-      (.text (fn [d] (.-type d))))
-  edgelabels)
-
-(defn build-edge-labels
-  [links]
-  (-> links
-      init-edge-labels
-      add-edge-labels-text-path))
-
-(defn init-nodes
-  [nodes]
-  (-> (js/d3.select "#nodes-graph svg")
-      (.selectAll ".node")
-      (.data nodes)
-      .enter
-      (.append "g")
-      (.attr "class" "node")))
-
-(defn append-circle
-  [nodes]
+(defn build-nodes
+  [nodes drag-start dragged drag-end]
   (let [nodes-idx {"LoggedUser" 5 "User" 10
                    "Tweet" 15 "Hashtag" 19}]
-    (-> nodes
+    (-> (js/d3.select "#nodes-graph svg")
+        (.append "g")
+        (.attr "class" "nodes")
+        (.selectAll "circle")
+        (.data nodes (fn [d] (.-id d)))
+        (.enter)
         (.append "circle")
-        (.attr "r" 15)
+        (.attr "r" 25)
         (.style "fill"
                 (fn [d]
                   (nth (.-schemeCategory20c js/d3)
-                       (get nodes-idx (.-label d)))))))
-  nodes)
+                       (get nodes-idx (.-label d)))))
+        (.call (-> (.drag js/d3)
+                   (.on "start" drag-start)
+                   (.on "drag" dragged)
+                   (.on "end" drag-end))))))
 
-(defn append-title
+(defn build-texts
   [nodes]
-  (-> nodes
-      (.append "title")
-      (.text (fn [d] (.-id d))))
-  nodes)
-
-(defn append-text
-  [nodes]
-  (-> nodes
+  (-> (js/d3.select "#nodes-graph svg")
+      (.append "g")
+      (.attr "class" "texts")
+      (.selectAll "text")
+      (.data nodes (fn [d] (.-id d)))
+      (.enter)
       (.append "text")
-      (.attr "dy" -3)
-      (.text (fn [d] (str (.-name d) ": " (.-label d)))))
-  nodes)
+      (.text (fn [d] (str (.-name d) ": " (.-label d))))
+      (.attr "dx" 28)
+      (.attr "dy" 10)))
 
-(defn build-nodes
-  [nodes]
-  (-> nodes
-      init-nodes
-      append-circle
-      append-title
-      append-text))
-
-(defn ticked
-  []
-  (let [svg (js/d3.select "#nodes-graph svg")
-        links (.selectAll svg ".link")
-        nodes (.selectAll svg ".node")
-        edgepaths (.selectAll svg ".edgepath")
-        edgelabels(.selectAll svg ".edgelabel")]
+(defn ticked-fn
+  [nodes links texts]
+  (fn [d]
     (-> links
-        (.attr "x1" (fn [d] (.-x (.-source d))))
-        (.attr "y1" (fn [d] (.-y (.-source d))))
-        (.attr "x2" (fn [d] (.-x (.-target d))))
-        (.attr "y2" (fn [d] (.-y (.-target d)))))
+        (.attr "x1" (fn [d] (aget d "source" "x")))
+        (.attr "y1" (fn [d] (aget d "source" "y")))
+        (.attr "x2" (fn [d] (aget d "target" "x")))
+        (.attr "y2" (fn [d] (aget d "target" "y"))))
     (-> nodes
-        (.attr "transform" (fn [d]
-                             (.log js/console d)
-                             (str "translate(" (.-x d) "," (.-y d) ")"))))
-    (-> edgepaths
-        (.attr "d" (fn [d]
-                     (str "M " (.-x (.-source d)) " " (.-y (.-source d))
-                          " L " (.-x (.-target d)) " " (.-y (.-target d))))))
-    (-> edgelabels
-        (.attr "transform" (fn [d]
-                             (this-as this
-                               (if (< (.-x (.-target d)) (.-x (.-source d)))
-                                 (let [bbox (.getBBox this)
-                                       rx (/ (+ (.-x bbox) (.-width bbox)) 2)
-                                       ry (/ (+ (.-y bbox) (.-height bbox)) 2)]
-                                   (str "rotate(180 " rx " " ry ")"))
-                                 "rotate(0)")))))))
+        (.attr "transform"
+               (fn [d]
+                 (str "translate(" (.-x d) "," (.-y d) ")"))))
+    (-> texts
+        (.attr "x" (fn [d] (.-x d)))
+        (.attr "y" (fn [d] (.-y d))))))
 
 (defn nodes-update
   []
@@ -316,17 +241,38 @@
       (let [{ns :nodes ls :links} nodes-links
             nodes-js (clj->js ns)
             links-js (clj->js ls)
-            sim (-> (simulation)
-                    (.nodes nodes-js)
-                    (.on "tick" ticked))]
-        (build-links links-js)
-        (build-nodes nodes-js)
-        (build-edge-paths links-js)
-        (build-edge-labels links-js)
-
-        (-> sim
-            (.force "link")
-            (.links links-js))))))
+            link (build-links links-js)
+            text (build-texts nodes-js)
+            sim (simulation)
+            drag-started (fn [d]
+                           (let [active (.-active (.-event js/d3))
+                                 x (.-x (.-event js/d3))
+                                 y (.-y (.-event js/d3))]
+                             (-> sim
+                                 (.alphaTarget 0.3)
+                                 (.restart))
+                             (aset d "fx" (.-x d))
+                             (aset d "fy" (.-y d))))
+            dragged (fn [d]
+                      (let [active (.-active (.-event js/d3))
+                            x (.-x (.-event js/d3))
+                            y (.-y (.-event js/d3))]
+                        (aset d "fx" x)
+                        (aset d "x" x)
+                        (aset d "fy" y)))
+            drag-end (fn [d]
+                       (-> sim
+                           (.alphaTarget 0))
+                       (aset d "fx" nil)
+                       (aset d "fy" nil))
+            node (build-nodes nodes-js drag-started dragged drag-end)
+            run (fn [nodes links]
+                  (-> sim
+                      (.nodes nodes)
+                      (.on "tick" (ticked-fn node link text))
+                      (.force "link")
+                      (.links links)))]
+        (run nodes-js links-js)))))
 
 (defn nodes-enter
   []
@@ -358,9 +304,6 @@
 
 (defn nodes-did-mount
   []
-  (-> (js/d3.select "#nodes-graph svg")
-      (.append "g")
-      (.attr "class" "nodes"))
   (nodes-did-update))
 
 (defn nodes-graph-did-mount
