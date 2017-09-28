@@ -96,23 +96,16 @@
   Return id of the logged user."
   [oauth-token oauth-token-secret data]
   (let [{id :id_str username :name screen_name :screen_name} data
-        logged-user (logged-user/find-by-id id)]
+        logged-user (logged-user/find-by-id id)
+        user-map {:id id :username username :screen_name screen_name
+                  :last_update (d/java-date->orient-date (java.util.Date.))
+                  :oauth_token oauth-token
+                  :oauth_token_secret oauth-token-secret}]
     (if (nil? logged-user)
-      (logged-user/create
-       {:id id
-        :username username
-        :screen_name screen_name
-        :last_update (d/java-date->orient-date (java.util.Date.))
-        :oauth_token oauth-token
-        :oauth_token_secret oauth-token-secret})
-      (logged-user/update-by-rid
-       {:id id
-        :username username
-        :screen_name screen_name
-        :last_update (d/java-date->orient-date (java.util.Date.))
-        :oauth_token oauth-token
-        :oauth_token_secret oauth-token-secret
-        :rid (:_rid logged-user)}))
+      (logged-user/create user-map)
+      (->> (:_rid logged-user)
+           (assoc user-map :rid)
+           (logged-user/update-by-rid)))
     id))
 
 (defn authorize-app
