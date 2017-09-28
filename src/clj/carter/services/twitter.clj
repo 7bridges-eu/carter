@@ -54,14 +54,6 @@
   (get-oauth-data)
   (:oauth-token @oauth-data))
 
-(defn user-approval-uri
-  "Return the URL needed to redirect the user to Twitter approval page."
-  []
-  (get-oauth-data)
-  (let [consumer (:oauth-consumer @oauth-data)
-        request-token (:oauth-token @oauth-data)]
-    (oauth/user-approval-uri consumer request-token)))
-
 (defn oauth-token->access-token
   "Transform an OAuth token in an Access token."
   [oauth-token oauth-verifier]
