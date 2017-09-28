@@ -54,15 +54,11 @@
 
   - \"user-id\" cookie is present
   - user data are already stored on the database
-  or:
-  - user credentials (oauth token and oauth secret) are still valid
-    (e.g. the user has not revoked the permission for carter)
 
   Otherwise, redirect to \"Sign in\"."
   [request]
   (let [logged-user-id (get-in request [:cookies "user-id" :value])]
-    (if (and (not (nil? (s.twitter/verify-credentials)))
-             (not (nil? logged-user-id))
+    (if (and (not (nil? logged-user-id))
              (existing-user? logged-user-id))
       (response/ok (index-html "carter - Home"))
       (response/found "/sign-in"))))
