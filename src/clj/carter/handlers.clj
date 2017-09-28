@@ -45,7 +45,7 @@
       (response/found "/denied"))))
 
 (defn permission-revoked?
-  ""
+  "Check if the user identified by `logged-user-id` has revoked the access."
   [logged-user-id]
   (nil? (try
           (s.twitter/home-tweets logged-user-id 1)
