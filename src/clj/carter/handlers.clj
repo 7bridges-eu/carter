@@ -44,6 +44,13 @@
             (assoc-in [:cookies "user-id"] {:value logged-user-id})))
       (response/found "/denied"))))
 
+(defn permission-revoked?
+  ""
+  [logged-user-id]
+  (nil? (try
+          (s.twitter/home-tweets logged-user-id 1)
+          (catch Exception e nil))))
+
 (defn existing-user?
   "Check if a user with id equal to `logged-user-id` exists."
   [logged-user-id]
@@ -59,6 +66,7 @@
   [request]
   (let [logged-user-id (get-in request [:cookies "user-id" :value])]
     (if (and (not (nil? logged-user-id))
+             (not (permission-revoked? logged-user-id))
              (existing-user? logged-user-id))
       (response/ok (index-html "carter - Home"))
       (response/found "/sign-in"))))

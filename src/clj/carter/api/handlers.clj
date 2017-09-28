@@ -74,7 +74,7 @@
    (api/GET "/user-approval" []
             :return [s.twitter/approval-response]
             :summary "returns the Twitter user approval URI"
-            (let [oauth-token (twitter/get-request-token)]
+            (let [oauth-token (twitter/request-token)]
               (response/found
                (str "https://api.twitter.com/oauth/authenticate?oauth_token="
                     oauth-token)))))

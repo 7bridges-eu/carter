@@ -101,13 +101,15 @@
                 :id (:id user)
                 :username (:username user)
                 :screen_name (:screen_name user)
-                :last_update (d/java-date->orient-date (java.util.Date.))}]
+                :last_update (d/java-date->orient-date (java.util.Date.))
+                :oauth_token (:oauth_token user)
+                :oauth_token_secret (:oauth_token_secret user)}]
     (logged-user/update-by-rid params)))
 
 (defn save-user-tweets
   "Get `user` tweets up to `tweet-count` and save them."
   [logged-user-id tweet-count]
-  (let [tweets (twitter/get-home-tweets tweet-count)
+  (let [tweets (twitter/home-tweets logged-user-id tweet-count)
         save-fn #(save-tweet logged-user-id %)]
     (->> tweets
          (filter has-hashtags?)
