@@ -46,7 +46,11 @@
       (response/found "/denied"))))
 
 (defn permission-revoked?
-  "Check if the user identified by `logged-user-id` has revoked the access."
+  "Check if the user identified by `logged-user-id` has revoked the access.
+
+  Note: Twitter APIs return an exception when the credentials are not valid
+  any more. We do not need to handle the exception, so we can safely return
+  nil and check against it."
   [logged-user-id]
   (nil? (try
           (s.twitter/home-tweets logged-user-id 1)
