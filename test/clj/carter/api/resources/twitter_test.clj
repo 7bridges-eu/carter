@@ -88,6 +88,5 @@
                            t/update-last-update (fn [id] id)]
                (t/save-user-tweets "test" 10) => "test"))
        (fact "save-first-150-tweets should accept no parameters"
-             (with-redefs [twitter/logged-user-id (fn [])
-                           t/save-user-tweets (fn [id n])]
-               (t/save-first-150-tweets) => nil)))
+             (with-redefs [t/save-user-tweets (fn [id n])]
+               (t/save-first-150-tweets "test") => nil)))
