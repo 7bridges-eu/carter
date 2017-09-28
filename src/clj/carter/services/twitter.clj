@@ -84,7 +84,7 @@
     (catch Exception e nil)))
 
 (defn save-logged-user
-  "Save logged user data in the database if not already present.
+  "Save or update logged user data in the database.
   Return id of the logged user."
   [oauth-token oauth-token-secret data]
   (let [{id :id_str username :name screen_name :screen_name} data
