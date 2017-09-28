@@ -18,8 +18,8 @@
             [re-frame.core :as rf]))
 
 (def routes
-  ["/" {"" :twitter-home
-        "home" :user-home}])
+  ["/" {"" :user-home
+        "sign-in" :twitter-home}])
 
 (defn- parse-url []
   (fn [url]

@@ -24,10 +24,6 @@
 
 (def oauth-data (atom {}))
 
-(defn logged-user-id
-  []
-  (get @oauth-data :logged-user-id))
-
 (defn get-consumer
   "OAuth consumer to interact with Twitter APIs."
   []
@@ -62,7 +58,7 @@
   "Return the URL needed to redirect the user to Twitter approval page."
   []
   (get-oauth-data)
-  (let [consumer(:oauth-consumer @oauth-data)
+  (let [consumer (:oauth-consumer @oauth-data)
         request-token (:oauth-token @oauth-data)]
     (oauth/user-approval-uri consumer request-token)))
 
@@ -89,37 +85,41 @@
                       access-token access-token-secret)))
 
 (defn verify-credentials
-  "Verify authentication credentials."
+  "Verify authentication credentials. If the credentials are not valid,
+  we catch the exception from the Twitter API and return nil."
   []
-  (account-verify-credentials
-   :oauth-creds (get-credentials)
-   :callbacks (SyncSingleCallback. response-return-body
-                                   response-throw-error
-                                   exception-rethrow)))
+  (try
+    (account-verify-credentials
+     :oauth-creds (get-credentials)
+     :callbacks (SyncSingleCallback. response-return-body
+                                     response-throw-error
+                                     exception-rethrow))
+    (catch Exception e nil)))
 
 (defn save-logged-user
-  "Save logged user data.
-  Update `oauth-data` atom with logged user id and save the logged user
-  in the database if not already present."
-  []
-  (let [response (verify-credentials)
-        {id :id_str username :name screen_name :screen_name} response
+  "Save logged user data in the database if not already present.
+  Return id of the logged user."
+  [data]
+  (let [{id :id_str username :name screen_name :screen_name} data
         logged-user (logged-user/find-by-id id)]
-    (swap! oauth-data assoc :logged-user-id id)
     (when (nil? logged-user)
       (logged-user/create
        {:id id
         :username username
         :screen_name screen_name
-        :last_update (d/java-date->orient-date (java.util.Date.))}))))
+        :last_update (d/java-date->orient-date (java.util.Date.))
+        :oauth_token (:oauth-token @oauth-data)
+        :oauth_token_secret (:oauth-token-secret @oauth-data)}))
+    id))
 
 (defn authorize-app
   "Complete app authorization.
-  OAuth `token` is converted to access token, and the id of the logged
-  user is saved in `oauth-data`."
+  OAuth `token` is converted to access token and logged user is stored on the
+  database if absent."
   [token verifier]
   (oauth-token->access-token token verifier)
-  (save-logged-user))
+  (-> (verify-credentials)
+      save-logged-user))
 
 (defn get-home-tweets
   "Return the last `tweet-count` tweets in the home of the authenticated user."

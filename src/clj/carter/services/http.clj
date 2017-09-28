@@ -29,12 +29,11 @@
 (compojure/defroutes app
   (-> (compojure/routes
        (route/resources "/")
-       (compojure/GET "/" request (handlers/sign-in request))
-       (-> (compojure/GET
-            "/callback" [oauth_token oauth_verifier]
-            (handlers/callback oauth_token oauth_verifier))
+       (compojure/GET "/" request (handlers/index-page request))
+       (compojure/GET "/sign-in" [] (handlers/sign-in))
+       (-> (compojure/GET "/callback" request (handlers/callback request))
            (wrap-defaults api-defaults))
-       (compojure/GET "/home" request (handlers/homepage))
+       (compojure/GET "/denied" request (handlers/index-page request))
        api/routes)
       cookies/wrap-cookies
       reload/wrap-reload))

@@ -16,7 +16,7 @@
   (:require [hiccup.page :as hiccup]))
 
 (defn index-html
-  "carter main index."
+  "Main index."
   [title]
   (hiccup/html5
    {:lang "it"}

@@ -117,7 +117,7 @@
     (update-last-update logged-user-id)))
 
 (defn save-first-150-tweets
-  "Save the first 150 tweets in the timeline of the logged user."
-  []
-  (let [user-id (twitter/logged-user-id)]
-    (save-user-tweets user-id 150)))
+  "Save the first 150 tweets in the timeline of the logged user identified
+  by `logged-user-id`."
+  [logged-user-id]
+  (save-user-tweets logged-user-id 150))

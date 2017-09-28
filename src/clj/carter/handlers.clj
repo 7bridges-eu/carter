@@ -14,31 +14,55 @@
 
 (ns carter.handlers
   (:require [carter.api.resources.twitter :as r.twitter]
+            [carter.model.logged-user :as logged-user]
             [carter.services.twitter :as s.twitter]
             [carter.templates :refer [index-html]]
             [ring.util.http-response :as response]))
 
 (defn sign-in
-  "Return the index page for the Twitter sign in.
-  If the user has already signed in, redirect to /home."
-  [request]
-  (let [logged-user-id (get-in request [:cookies "user-id" :value])]
-    (if (nil? logged-user-id)
-      (response/ok (index-html "carter - Sign in"))
-      (response/found "/home"))))
+  "Direct to the sign in page."
+  []
+  (response/ok (index-html "carter - Sign in")))
 
 (defn callback
-  "Complete app authorization and save the first 150 tweets."
-  [token verifier]
-  (s.twitter/authorize-app token verifier)
-  (r.twitter/save-first-150-tweets)
-  (response/found "/home"))
+  "Callback for Twitter API.
 
-(defn homepage
-  "Redirect the logged user to the homepage."
-  []
-  (let [user-id (s.twitter/logged-user-id)]
-    (response/content-type
-     (-> (response/ok (index-html "carter - Home"))
-         (assoc-in [:cookies "user-id"] {:value user-id}))
-     "text/html; charset=utf-8")))
+  If the user granted permission to carter:
+  - save the first 150 tweets of her timeline
+  - store her twitter id in the cookies as \"user-id\"
+  - direct her to the homepage
+
+  Otherwise, redirect her to the \"Sign in\" page."
+  [request]
+  (let [query-params (:params request)
+        {denied :denied token :oauth_token
+         verifier :oauth_verifier} query-params]
+    (if (nil? denied)
+      (let [logged-user-id (s.twitter/authorize-app token verifier)]
+        (r.twitter/save-first-150-tweets logged-user-id)
+        (-> (response/found "/")
+            (assoc-in [:cookies "user-id"] {:value logged-user-id})))
+      (response/found "/denied"))))
+
+(defn existing-user?
+  "Check if a user with id equal to `logged-user-id` exists."
+  [logged-user-id]
+  (not (nil? (logged-user/find-by-id logged-user-id))))
+
+(defn index-page
+  "Direct to \"/home\" only when:
+
+  - \"user-id\" cookie is present
+  - user data are already stored on the database
+  or:
+  - user credentials (oauth token and oauth secret) are still valid
+    (e.g. the user has not revoked the permission for carter)
+
+  Otherwise, redirect to \"Sign in\"."
+  [request]
+  (let [logged-user-id (get-in request [:cookies "user-id" :value])]
+    (if (and (not (nil? (s.twitter/verify-credentials)))
+             (not (nil? logged-user-id))
+             (existing-user? logged-user-id))
+      (response/ok (index-html "carter - Home"))
+      (response/found "/sign-in"))))
