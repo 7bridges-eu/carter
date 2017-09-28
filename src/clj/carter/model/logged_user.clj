@@ -23,7 +23,9 @@
 
 (def update-queries
   {:update-by-rid "update LoggedUser set id = :id, username = :username,
-                   screen_name = :screen_name, last_update = :last_update
+                   screen_name = :screen_name, last_update = :last_update,
+                   oauth_token = :oauth_token,
+                   oauth_token_secret = :oauth_token_secret
                    where @rid = :rid"})
 
 (defn find-all

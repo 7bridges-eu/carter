@@ -28,8 +28,7 @@
 
 (facts "Test API endpoints"
        (fact "Testing find top 10 hashtags"
-             (with-redefs [twitter/logged-user-id (fn [] [])
-                           h/find-top-10-hashtags (fn [id] id)]
+             (with-redefs [h/find-top-10-hashtags (fn [id] id)]
                (let [request (mock/request :get "/api/hashtag/tweet")
                      response (http/app request)]
                  (:status response) => 200)))
@@ -39,27 +38,24 @@
                      response (http/app request)]
                  (:status response) => 200)))
        (fact "Testing save user timeline tweets"
-             (with-redefs [twitter/logged-user-id (fn [] [])
-                           tw/save-user-tweets (fn [id n] n)]
+             (with-redefs [tw/save-user-tweets (fn [id n] n)]
                (let [body (json/generate-string {:tweet-count 1})
                      request (-> (mock/request :post "/api/tweet/user" body)
                                  (mock/content-type "application/json"))
                      response (http/app request)]
                  (:status response) => 200)))
        (fact "Testing get Twitter user approval URI endpoint"
-             (with-redefs [twitter/get-request-token (fn [])]
+             (with-redefs [twitter/request-token (fn [])]
                (let [request (mock/request :get "/api/twitter/user-approval")
                      response (http/app request)]
                  (:status response) => 302)))
        (fact "Testing get logged-user data endpoint"
-             (with-redefs [twitter/logged-user-id (fn [] [])
-                           lu/get-data (fn [id] id)]
+             (with-redefs [lu/get-data (fn [id] id)]
                (let [request (mock/request :get "/api/logged-user/data")
                      response (http/app request)]
                  (:status response) => 200)))
        (fact "Testing get graph data endpoint"
-             (with-redefs [twitter/logged-user-id (fn [] [])
-                           g/graph-data (fn [id] id)]
+             (with-redefs [g/graph-data (fn [id] id)]
                (let [request (mock/request :get "/api/graph/data")
                      response (http/app request)]
                  (:status response) => 200))))

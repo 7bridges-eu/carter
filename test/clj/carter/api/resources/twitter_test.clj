@@ -80,14 +80,13 @@
                            logged-user/update-by-rid (fn [t] t)]
                (t/update-last-update "test") => (contains {:rid anything})))
        (fact "save-user-tweets should accept and id and tweet-count"
-             (with-redefs [twitter/get-home-tweets (fn [tweet-count]
-                                                     tweets)
+             (with-redefs [twitter/home-tweets (fn [id tweet-count]
+                                                 tweets)
                            t/has-hashtags? (fn [ts] ts)
                            t/process-tweet (fn [t] t)
                            t/save-tweet (fn [id t] t)
                            t/update-last-update (fn [id] id)]
                (t/save-user-tweets "test" 10) => "test"))
        (fact "save-first-150-tweets should accept no parameters"
-             (with-redefs [twitter/logged-user-id (fn [])
-                           t/save-user-tweets (fn [id n])]
-               (t/save-first-150-tweets) => nil)))
+             (with-redefs [t/save-user-tweets (fn [id n])]
+               (t/save-first-150-tweets "test") => nil)))

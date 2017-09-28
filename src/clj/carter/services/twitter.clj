@@ -24,10 +24,6 @@
 
 (def oauth-data (atom {}))
 
-(defn logged-user-id
-  []
-  (get @oauth-data :logged-user-id))
-
 (defn get-consumer
   "OAuth consumer to interact with Twitter APIs."
   []
@@ -52,19 +48,11 @@
       (swap! oauth-data assoc :oauth-token-secret oauth_token_secret)
       (swap! oauth-data assoc :oauth-consumer consumer))))
 
-(defn get-request-token
+(defn request-token
   "Get the OAuth request token."
   []
   (get-oauth-data)
   (:oauth-token @oauth-data))
-
-(defn user-approval-uri
-  "Return the URL needed to redirect the user to Twitter approval page."
-  []
-  (get-oauth-data)
-  (let [consumer(:oauth-consumer @oauth-data)
-        request-token (:oauth-token @oauth-data)]
-    (oauth/user-approval-uri consumer request-token)))
 
 (defn oauth-token->access-token
   "Transform an OAuth token in an Access token."
@@ -73,60 +61,65 @@
         token {:oauth_token (:oauth-token @oauth-data)
                :oauth_token_secret (:oauth-token-secret @oauth-data)}]
     (when (= oauth-token (:oauth-token @oauth-data))
-      (let [access-token (oauth/access-token consumer token oauth-verifier)
-            {:keys [oauth_token oauth_token_secret]} access-token]
-        (swap! oauth-data assoc :oauth-token oauth_token)
-        (swap! oauth-data assoc :oauth-token-secret oauth_token_secret)))))
+      (oauth/access-token consumer token oauth-verifier))))
 
-(defn get-credentials
+(defn credentials
   "Set up the necessary credentials to interact with Twitter API."
-  []
+  [access-token access-token-secret]
   (let [consumer-key (get-in config [:twitter :consumer-key])
-        consumer-secret (get-in config [:twitter :consumer-secret])
-        access-token (:oauth-token @oauth-data)
-        access-token-secret (:oauth-token-secret @oauth-data)]
+        consumer-secret (get-in config [:twitter :consumer-secret])]
     (make-oauth-creds consumer-key consumer-secret
                       access-token access-token-secret)))
 
 (defn verify-credentials
-  "Verify authentication credentials."
-  []
-  (account-verify-credentials
-   :oauth-creds (get-credentials)
-   :callbacks (SyncSingleCallback. response-return-body
-                                   response-throw-error
-                                   exception-rethrow)))
+  "Verify authentication credentials. If the credentials are not valid,
+  we catch the exception from the Twitter API and return nil."
+  [access-token access-token-secret]
+  (try
+    (account-verify-credentials
+     :oauth-creds (credentials access-token access-token-secret)
+     :callbacks (SyncSingleCallback. response-return-body
+                                     response-throw-error
+                                     exception-rethrow))
+    (catch Exception e nil)))
 
 (defn save-logged-user
-  "Save logged user data.
-  Update `oauth-data` atom with logged user id and save the logged user
-  in the database if not already present."
-  []
-  (let [response (verify-credentials)
-        {id :id_str username :name screen_name :screen_name} response
-        logged-user (logged-user/find-by-id id)]
-    (swap! oauth-data assoc :logged-user-id id)
-    (when (nil? logged-user)
-      (logged-user/create
-       {:id id
-        :username username
-        :screen_name screen_name
-        :last_update (d/java-date->orient-date (java.util.Date.))}))))
+  "Save logged user data in the database if not already present.
+  Return id of the logged user."
+  [oauth-token oauth-token-secret data]
+  (let [{id :id_str username :name screen_name :screen_name} data
+        logged-user (logged-user/find-by-id id)
+        user-map {:id id :username username :screen_name screen_name
+                  :last_update (d/java-date->orient-date (java.util.Date.))
+                  :oauth_token oauth-token
+                  :oauth_token_secret oauth-token-secret}]
+    (if (nil? logged-user)
+      (logged-user/create user-map)
+      (->> (:_rid logged-user)
+           (assoc user-map :rid)
+           (logged-user/update-by-rid)))
+    id))
 
 (defn authorize-app
   "Complete app authorization.
-  OAuth `token` is converted to access token, and the id of the logged
-  user is saved in `oauth-data`."
+  OAuth `token` is converted to access token and logged user is stored on the
+  database if absent."
   [token verifier]
-  (oauth-token->access-token token verifier)
-  (save-logged-user))
+  (let [access-token (oauth-token->access-token token verifier)
+        {oauth-token :oauth_token oauth-token-secret :oauth_token_secret}
+        access-token
+        user-data (verify-credentials oauth-token oauth-token-secret)]
+    (save-logged-user oauth-token oauth-token-secret user-data)))
 
-(defn get-home-tweets
+(defn home-tweets
   "Return the last `tweet-count` tweets in the home of the authenticated user."
-  [tweet-count]
-  (statuses-home-timeline
-   :oauth-creds (get-credentials)
-   :params {:count tweet-count}
-   :callbacks (SyncSingleCallback. response-return-body
-                                   response-throw-error
-                                   exception-rethrow)))
+  [logged-user-id tweet-count]
+  (let [logged-user (logged-user/find-by-id logged-user-id)
+        token (:oauth_token logged-user)
+        secret (:oauth_token_secret logged-user)]
+    (statuses-home-timeline
+     :oauth-creds (credentials token secret)
+     :params {:count tweet-count}
+     :callbacks (SyncSingleCallback. response-return-body
+                                     response-throw-error
+                                     exception-rethrow))))
