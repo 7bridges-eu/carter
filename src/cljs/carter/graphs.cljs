@@ -181,7 +181,7 @@
                      (.enter)
                      (.append "line")
                      (.attr "stroke-width" (fn [d] 1))
-                     (.attr "stroke" (fn [d] "#000")))]
+                     (.attr "stroke" (fn [d] "#999")))]
     (-> elements
         (.append "title")
         (.text (fn [d] (.-type d))))
@@ -189,8 +189,8 @@
 
 (defn build-nodes
   [nodes drag-start dragged drag-end]
-  (let [nodes-idx {"LoggedUser" 5 "User" 8
-                   "Tweet" 13 "Hashtag" 19}]
+  (let [nodes-idx {"LoggedUser" 1 "User" 5
+                   "Tweet" 9 "Hashtag" 12}]
     (-> (js/d3.select "#nodes-graph svg")
         (.append "g")
         (.attr "class" "nodes")
