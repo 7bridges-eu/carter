@@ -164,7 +164,10 @@
       (.force "link" (-> (js/d3.forceLink)
                          (.id (fn [d] (.-id d)))
                          (.distance 100)))
-      (.force "charge" (js/d3.forceManyBody))
+      (.force "charge" (-> (js/d3.forceManyBody)
+                           (.strength -40)))
+      (.force "collide" (-> (js/d3.forceCollide)
+                            (.radius 10)))
       (.force "center"
               (js/d3.forceCenter (/ graph-width 2) (/ graph-height 2)))))
 
@@ -186,8 +189,8 @@
 
 (defn build-nodes
   [nodes drag-start dragged drag-end]
-  (let [nodes-idx {"LoggedUser" 5 "User" 10
-                   "Tweet" 15 "Hashtag" 19}]
+  (let [nodes-idx {"LoggedUser" 5 "User" 8
+                   "Tweet" 13 "Hashtag" 19}]
     (-> (js/d3.select "#nodes-graph svg")
         (.append "g")
         (.attr "class" "nodes")
@@ -195,7 +198,7 @@
         (.data nodes (fn [d] (.-id d)))
         (.enter)
         (.append "circle")
-        (.attr "r" 25)
+        (.attr "r" 15)
         (.style "fill"
                 (fn [d]
                   (nth (.-schemeCategory20c js/d3)
