@@ -17,33 +17,35 @@
             [day8.re-frame.http-fx]
             [re-frame.core :as rf]))
 
-(rf/reg-event-fx
- :get-tweets
- (fn [{db :db} _]
-   (let [tweet-count (get db :tweet-count 0)]
-     (assoc
-      (ajax/post-request "/api/tweet/user"
-                         {:tweet-count tweet-count}
-                         [:get-hashtags-tweets]
-                         [:bad-response])
-      :db (-> db
-              (assoc :data [])
-              (assoc :loading true))))))
-
 (rf/reg-event-db
  :load-data
  (fn [db [_ value]]
-   (assoc db :data value)))
+   (-> db
+       (assoc :circles (:circles value))
+       (assoc :nodes (select-keys value [:nodes :links]))
+       (assoc :loading false))))
 
 (rf/reg-event-fx
- :get-hashtags-tweets
+ :get-data
  (fn [{db :db} _]
    (assoc
-    (ajax/get-request "/api/hashtag/tweet"
+    (ajax/get-request "/api/graphs/data"
                       [:load-data]
                       [:bad-response])
     :dispatch [:get-logged-user]
-    :db (assoc db :loading false))))
+    :db (assoc db :loading :true))))
+
+(rf/reg-event-fx
+ :refresh
+ (fn [{db :db} _]
+   (let [tweet-count (get db :tweet-count 0)]
+     (assoc
+      (ajax/post-request "/api/graphs/data"
+                         {:tweet-count tweet-count}
+                         [:load-data]
+                         [:bad-response])
+      :dispatch [:get-logged-user]
+      :db (assoc db :loading true)))))
 
 (rf/reg-event-db
  :show-relations-graph
@@ -51,18 +53,3 @@
    (if value
      (assoc db :show-relations-graph false)
      (assoc db :show-relations-graph true))))
-
-(rf/reg-event-db
- :load-nodes-links
- (fn [db [_ value]]
-   (assoc db :nodes-links value)))
-
-(rf/reg-event-fx
- :get-nodes-links
- (fn [{db :db} _]
-   (assoc
-    (ajax/get-request "/api/graph/data"
-                      [:load-nodes-links]
-                      [:bad-response])
-    :dispatch [:get-logged-user]
-    :db (assoc db :loading false))))

@@ -27,7 +27,7 @@
 (defn get-data
   "Retrieve data subscription. Add :value for d3.hierarchy."
   []
-  (let [data @(rf/subscribe [:data])]
+  (let [data @(rf/subscribe [:circles])]
     (mapv (fn [d] (assoc d :value (:tweets d))) data)))
 
 (defn data-clj->data-js
@@ -239,7 +239,7 @@
 
 (defn nodes-update
   []
-  (let [nodes-links @(rf/subscribe [:nodes-links])]
+  (let [nodes-links @(rf/subscribe [:nodes])]
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
             nodes-js (clj->js ns)
@@ -284,7 +284,7 @@
 
 (defn nodes-exit
   []
-  (let [nodes-links @(rf/subscribe [:nodes-links])]
+  (let [nodes-links @(rf/subscribe [:nodes])]
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
             nodes (clj->js ns)

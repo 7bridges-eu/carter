@@ -32,10 +32,10 @@
    (:message db)))
 
 (rf/reg-sub-raw
- :data
+ :circles
  (fn [db _]
-   (rf/dispatch [:get-hashtags-tweets])
-   (r/reaction (get @db :data))))
+   (rf/dispatch [:get-data])
+   (r/reaction (get @db :circles))))
 
 (rf/reg-sub
  :loading
@@ -53,8 +53,7 @@
  (fn [db _]
    (:show-relations-graph db)))
 
-(rf/reg-sub-raw
- :nodes-links
+(rf/reg-sub
+ :nodes
  (fn [db _]
-   (rf/dispatch [:get-nodes-links])
-   (r/reaction (get @db :nodes-links))))
+   (:nodes db)))
