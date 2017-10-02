@@ -19,15 +19,30 @@
             [clojure.string :as s]
             [re-frame.core :as rf]))
 
-(defn home-panel
+(defn logged-user-info
   []
   (fn []
     (let [logged-user (rf/subscribe [:logged-user])
           last-update (s/split (:last-update @logged-user) #" ")
           date (second last-update)
-          hours (first last-update)
-          data (rf/subscribe [:data])
-          loading? (rf/subscribe [:loading])
+          hours (first last-update)]
+      [:div
+       {:style {:padding-top "2em" :text-align "center"}}
+       [:div.ui.labeled.mini.input
+        {:style {:padding-right ".5em"}}
+        [:div.ui.basic.segment
+         [:p
+          "Hello " [:strong (:screen-name @logged-user)] "! This is a graph
+              of the 10 most used hashtags in your timeline."]
+         [:p
+          "It was updated on " date ", at " hours ". Would you like to "
+          [:a {:style {:cursor "pointer"} :on-click #(rf/dispatch [:refresh])}
+           "refresh it"] "?"]]]])))
+
+(defn home-panel
+  []
+  (fn []
+    (let [loading? (rf/subscribe [:loading])
           show-relations-graph? (rf/subscribe [:show-relations-graph])]
       (if @loading?
         [:div.ui.active.dimmer
@@ -35,19 +50,7 @@
         [:div
          [:div.ui.container {:style {:margin-top "1em"}}
           [common/page-title "carter"]
-          [:div
-           {:style {:padding-top "2em" :text-align "center"}}
-           [:div.ui.labeled.mini.input
-            {:style {:padding-right ".5em"}}
-            [:div.ui.basic.segment
-             [:p
-              "Hello " [:strong (:screen-name @logged-user)] "! This is a graph
-              of the 10 most used hashtags in your timeline."]
-             [:p
-              "It was updated on " date ", at " hours ". Would you like to "
-              [:a {:style {:cursor "pointer"}
-                   :on-click #(rf/dispatch [:get-tweets])}
-               "refresh it"] "?"]]]]
+          [logged-user-info]
           [:div
            {:style {:text-align "center"}}
            [:button.ui.button
@@ -58,7 +61,6 @@
               "Display relations graph")]]
           [:div
            {:style {:text-align "center"}}
-           (if (and (false? @show-relations-graph?)
-                    (not (empty? @data)))
+           (if (false? @show-relations-graph?)
              [graphs/circles-graph]
              [graphs/nodes-graph])]]]))))

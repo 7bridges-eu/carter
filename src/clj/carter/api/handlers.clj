@@ -17,16 +17,13 @@
              [graph :as r.graph]
              [hashtag :as r.hashtag]
              [logged-user :as r.logged-user]
-             [tweet :as r.tweet]
              [twitter :as r.twitter]]
             [carter.api.schemas
              [graph :as s.graph]
-             [hashtag :as s.hashtag]
              [logged-user :as s.logged-user]
              [tweet :as s.tweet]
              [twitter :as s.twitter]]
             [carter.services.twitter :as twitter]
-            [carter.templates :refer [index-html]]
             [compojure.api.sweet :as api]
             [ring.util.http-response :as response]))
 
@@ -41,32 +38,6 @@
       :title "carter APIs"
       :description "These are all the carter APIs"}
      :tags [{:name "operations"}]}}}
-
-  (api/context
-   "/api/hashtag" []
-   :tags ["operations"]
-   (api/GET "/tweet" req
-            :return [s.hashtag/tweet-count-response]
-            :summary "returns the last tweet-count tweets"
-            (let [logged-user-id (get-in req [:cookies "user-id" :value])]
-              (response/ok
-               (r.hashtag/find-top-10-hashtags logged-user-id)))))
-
-  (api/context
-   "/api/tweet" [hashtag]
-   :tags ["operations"]
-   (api/GET "/hashtag/:hashtag" [hashtag]
-            :return [s.tweet/tweet-response]
-            :summary "returns all the tweets for a given hashtag"
-            (response/ok (r.tweet/get-by-hashtag hashtag)))
-   (api/POST "/user" req
-             :return [s.tweet/tweet-user-response]
-             :body [body s.tweet/Body]
-             :summary "save user timeline tweets"
-             (let [{:keys [tweet-count]} body
-                   logged-user-id (get-in req [:cookies "user-id" :value])]
-               (response/ok
-                (r.twitter/save-user-tweets logged-user-id tweet-count)))))
 
   (api/context
    "/api/twitter" []
@@ -89,10 +60,26 @@
               (response/ok (r.logged-user/get-data logged-user-id)))))
 
   (api/context
-   "/api/graph" []
+   "/api/graphs" []
    :tags ["operations"]
    (api/GET "/data" req
             :return [s.graph/graph-data-response]
-            :summary "returns data for the relationships graph"
+            :summary "returns the required data for the graphs"
             (let [logged-user-id (get-in req [:cookies "user-id" :value])]
-              (response/ok (r.graph/graph-data logged-user-id))))))
+              (let [hashtags (r.hashtag/find-top-10-hashtags logged-user-id)
+                    {nodes :nodes links :links}
+                    (r.graph/graph-data logged-user-id)]
+                (response/ok
+                 (hash-map :circles hashtags :nodes nodes :links links)))))
+   (api/POST "/data" req
+             :return [s.graph/graph-data-response]
+             :body [body s.tweet/Body]
+             :summary "saves user timeline tweets and returns data for graphs"
+             (let [{:keys [tweet-count]} body
+                   logged-user-id (get-in req [:cookies "user-id" :value])]
+               (r.twitter/save-user-tweets logged-user-id tweet-count)
+               (let [hashtags (r.hashtag/find-top-10-hashtags logged-user-id)
+                     {nodes :nodes links :links}
+                     (r.graph/graph-data logged-user-id)]
+                 (response/ok
+                  (hash-map :circles hashtags :nodes nodes :links links)))))))

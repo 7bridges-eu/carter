@@ -33,8 +33,7 @@
 (rf/reg-event-fx
  :bad-response
  (fn [{db :db} [_ response]]
-   (.log js/console response)
-   {:dispatch [:show-error (get-in response [:response :error])]}))
+   (.log js/console response)))
 
 (rf/reg-event-db
  :load-user

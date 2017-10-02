@@ -16,5 +16,6 @@
   (:require [schema.core :as schema]))
 
 (def graph-data-response
-  {:nodes schema/Any
+  {:circles schema/Any
+   :nodes schema/Any
    :links schema/Any})

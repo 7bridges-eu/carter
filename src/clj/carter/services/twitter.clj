@@ -16,6 +16,8 @@
   (:require [carter.dates :as d]
             [carter.model.logged-user :as logged-user]
             [carter.services.config :refer [config]]
+            [clojure.data.json :as json]
+            [http.async.client :as ac]
             [oauth.client :as oauth]
             [twitter.api.restful :refer :all]
             [twitter.callbacks.handlers :refer :all]
@@ -71,17 +73,25 @@
     (make-oauth-creds consumer-key consumer-secret
                       access-token access-token-secret)))
 
+(defn get-error-message
+  "Return error code and error message from Twitter response."
+  [response]
+  (let [status (ac/status response)
+        body (json/read-json (ac/string response))
+        desc (or (:message (first (:errors body))) (:error body))
+        code (or (:code (first (:errors body))) (:code status))
+        req (:request body)]
+    {:code code :desc desc}))
+
 (defn verify-credentials
   "Verify authentication credentials. If the credentials are not valid,
   we catch the exception from the Twitter API and return nil."
   [access-token access-token-secret]
-  (try
-    (account-verify-credentials
-     :oauth-creds (credentials access-token access-token-secret)
-     :callbacks (SyncSingleCallback. response-return-body
-                                     response-throw-error
-                                     exception-rethrow))
-    (catch Exception e nil)))
+  (account-verify-credentials
+   :oauth-creds (credentials access-token access-token-secret)
+   :callbacks (SyncSingleCallback. response-return-body
+                                   get-error-message
+                                   get-error-message)))
 
 (defn save-logged-user
   "Save or update logged user data in the database.
