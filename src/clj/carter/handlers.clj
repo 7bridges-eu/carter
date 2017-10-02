@@ -48,13 +48,13 @@
 (defn permission-revoked?
   "Check if the user identified by `logged-user-id` has revoked the access.
 
-  Note: Twitter APIs return an exception when the credentials are not valid
-  any more. We do not need to handle the exception, so we can safely return
-  nil and check against it."
+  See: https://developer.twitter.com/en/docs/basics/response-codes"
   [logged-user-id]
-  (nil? (try
-          (s.twitter/home-tweets logged-user-id 1)
-          (catch Exception e nil))))
+  (let [user (logged-user/find-by-id logged-user-id)
+        {token :oauth_token secret :oauth_token_secret} user
+        response (s.twitter/verify-credentials token secret)]
+    (println response)
+    (= (:code response) 32)))
 
 (defn existing-user?
   "Check if a user with id equal to `logged-user-id` exists."
@@ -72,7 +72,7 @@
   [request]
   (let [logged-user-id (get-in request [:cookies "user-id" :value])]
     (if (and (not (nil? logged-user-id))
-             (not (permission-revoked? logged-user-id))
-             (existing-user? logged-user-id))
+             (existing-user? logged-user-id)
+             (not (permission-revoked? logged-user-id)))
       (response/ok (index-html "carter - Home"))
       (response/found "/sign-in"))))
