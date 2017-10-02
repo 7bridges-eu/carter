@@ -89,9 +89,9 @@
   [access-token access-token-secret]
   (account-verify-credentials
    :oauth-creds (credentials access-token access-token-secret)
-   :callbacks (SyncSingleCallback. get-twitter-error-message
+   :callbacks (SyncSingleCallback. response-return-body
                                    get-error-message
-                                   response-return-body)))
+                                   get-error-message)))
 
 (defn save-logged-user
   "Save or update logged user data in the database.

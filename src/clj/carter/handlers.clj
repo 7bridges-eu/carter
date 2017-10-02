@@ -47,7 +47,6 @@
 
 (defn permission-revoked?
   "Check if the user identified by `logged-user-id` has revoked the access.
-
   See: https://developer.twitter.com/en/docs/basics/response-codes"
   [logged-user-id]
   (let [user (logged-user/find-by-id logged-user-id)
