@@ -27,23 +27,6 @@
             [ring.mock.request :as mock]))
 
 (facts "Test API endpoints"
-       (fact "Testing find top 10 hashtags"
-             (with-redefs [h/find-top-10-hashtags (fn [id] id)]
-               (let [request (mock/request :get "/api/hashtag/tweet")
-                     response (http/app request)]
-                 (:status response) => 200)))
-       (fact "Testing find tweet by hashtag endpoint"
-             (with-redefs [t/get-by-hashtag (fn [s] s)]
-               (let [request (mock/request :get "/api/tweet/hashtag/test")
-                     response (http/app request)]
-                 (:status response) => 200)))
-       (fact "Testing save user timeline tweets"
-             (with-redefs [tw/save-user-tweets (fn [id n] n)]
-               (let [body (json/generate-string {:tweet-count 1})
-                     request (-> (mock/request :post "/api/tweet/user" body)
-                                 (mock/content-type "application/json"))
-                     response (http/app request)]
-                 (:status response) => 200)))
        (fact "Testing get Twitter user approval URI endpoint"
              (with-redefs [twitter/request-token (fn [])]
                (let [request (mock/request :get "/api/twitter/user-approval")
@@ -54,8 +37,18 @@
                (let [request (mock/request :get "/api/logged-user/data")
                      response (http/app request)]
                  (:status response) => 200)))
-       (fact "Testing get graph data endpoint"
-             (with-redefs [g/graph-data (fn [id] id)]
-               (let [request (mock/request :get "/api/graph/data")
+       (fact "Testing get graphs data endpoint"
+             (with-redefs [h/find-top-10-hashtags (fn [id] id)
+                           g/graph-data (fn [id] id)]
+               (let [request (mock/request :get "/api/graphs/data")
+                     response (http/app request)]
+                 (:status response) => 200)))
+       (fact "Testing get graphs data endpoint"
+             (with-redefs [tw/save-user-tweets (fn [id n] n)
+                           h/find-top-10-hashtags (fn [id] id)
+                           g/graph-data (fn [id] id)]
+               (let [body (json/generate-string {:tweet-count 1})
+                     request (-> (mock/request :post "/api/graphs/data"  body)
+                                 (mock/content-type "application/json"))
                      response (http/app request)]
                  (:status response) => 200))))
