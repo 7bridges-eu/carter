@@ -26,11 +26,10 @@
    ;; ClojureScript
    [bidi "2.0.16"]
    [cljs-ajax "0.5.9"]
-   [cljsjs/d3 "4.3.0-5"]
    [cljsjs/semantic-ui-react "0.68.4-0"]
    [day8.re-frame/http-fx "0.1.3"]
    [kibu/pushy "0.3.7"]
-   [org.clojure/clojurescript "1.9.521"]
+   [org.clojure/clojurescript "1.9.908"]
    [re-frame "0.9.2"]
    [reagent "0.6.1"]
    [reagent-utils "0.2.1"]]
@@ -60,8 +59,8 @@
   {:dev
    {:dependencies [[binaryage/devtools "0.9.4"]
                    [com.cemerick/piggieback "0.2.1"]
-                   [figwheel-sidecar "0.5.10"]]
-    :plugins [[lein-figwheel "0.5.10"]]}}
+                   [figwheel-sidecar "0.5.14"]]
+    :plugins [[lein-figwheel "0.5.14"]]}}
 
   :cljsbuild
   {:builds
