@@ -43,6 +43,10 @@
       (.sum (fn [d] (.-value d)))
       pack))
 
+(defn node-color
+  [idx]
+  (nth (js->clj d3.schemeCategory20c) idx))
+
 (defn create-circles
   "Create the node circles starting from `root` node."
   [root]
@@ -56,8 +60,7 @@
                            (str "translate(" (.-x d) "," (.-y d) ")")))
       (.append "circle")
       (.attr "r" (fn [d] (.-r d)))
-      (.style "fill" (fn [_]
-                       (nth (js->clj d3.schemeCategory20c) (rand-int 20))))))
+      (.style "fill" (fn [_] (node-color (rand-int 20))))))
 
 (defn create-texts
   "Add hashtags to the circles."
@@ -140,6 +143,8 @@
     :component-did-update #(graph-did-update)}))
 
 ;;; Nodes graph
+(def nodes-idx {"LoggedUser" 1 "User" 5 "Tweet" 9 "Hashtag" 12})
+
 (defn initialize-svg
   []
   (-> (d3.select "#nodes-graph svg")
@@ -189,24 +194,20 @@
 
 (defn build-nodes
   [nodes drag-start dragged drag-end]
-  (let [nodes-idx {"LoggedUser" 1 "User" 5
-                   "Tweet" 9 "Hashtag" 12}]
-    (-> (d3.select "#nodes-graph svg")
-        (.append "g")
-        (.attr "class" "nodes")
-        (.selectAll "circle")
-        (.data nodes (fn [d] (.-id d)))
-        (.enter)
-        (.append "circle")
-        (.attr "r" 15)
-        (.style "fill"
-                (fn [d]
-                  (nth (js->clj d3.schemeCategory20c)
-                       (get nodes-idx (.-label d)))))
-        (.call (-> (d3.drag)
-                   (.on "start" drag-start)
-                   (.on "drag" dragged)
-                   (.on "end" drag-end))))))
+  (-> (d3.select "#nodes-graph svg")
+      (.append "g")
+      (.attr "class" "nodes")
+      (.selectAll "circle")
+      (.data nodes (fn [d] (.-id d)))
+      (.enter)
+      (.append "circle")
+      (.attr "r" 15)
+      (.style "fill"
+              (fn [d] (node-color (get nodes-idx (.-label d)))))
+      (.call (-> (d3.drag)
+                 (.on "start" drag-start)
+                 (.on "drag" dragged)
+                 (.on "end" drag-end)))))
 
 (defn build-texts
   [nodes]
@@ -217,9 +218,29 @@
       (.data nodes (fn [d] (.-id d)))
       (.enter)
       (.append "text")
-      (.text (fn [d] (str (.-name d) ": " (.-label d))))
+      (.text (fn [d] (.-name d)))
       (.attr "dx" 28)
       (.attr "dy" 10)))
+
+(defn build-legend
+  []
+  (let [domain (vec (keys nodes-idx))
+        rangev (mapv node-color (vals nodes-idx))
+        ordinal (-> (d3.scaleOrdinal)
+                    (.domain (clj->js domain))
+                    (.range (clj->js rangev)))
+        svg-legend (-> (d3.select "svg")
+                       (.append "g")
+                       (.attr "class" "legendOrdinal")
+                       (.attr "transform" "translate(20,20)"))
+        legend-ordinal (-> (d3.legendColor)
+                           (.title "Nodes")
+                           (.shape "path" ((-> (d3.symbol)
+                                               (.type d3.symbolCircle)
+                                               (.size 250))))
+                           (.shapePadding 10)
+                           (.scale ordinal))]
+    (legend-ordinal svg-legend)))
 
 (defn ticked-fn
   [nodes links texts]
@@ -239,6 +260,7 @@
 
 (defn nodes-update
   []
+  (build-legend)
   (let [nodes-links @(rf/subscribe [:nodes])]
     (when-not (empty? nodes-links)
       (let [{ns :nodes ls :links} nodes-links
