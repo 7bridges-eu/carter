@@ -31,7 +31,7 @@
    [:body
     [:div#app]
     (hiccup/include-js
-     "https://d3js.org/d3.v4.min.js"
-     "https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"
+     "//d3js.org/d3.v4.min.js"
+     "//cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"
      "js/main.js")
     [:script "carter.core.init();"]]))
