@@ -52,7 +52,6 @@
   (let [user (logged-user/find-by-id logged-user-id)
         {token :oauth_token secret :oauth_token_secret} user
         response (s.twitter/verify-credentials token secret)]
-    (println response)
     (= (:code response) 32)))
 
 (defn existing-user?
