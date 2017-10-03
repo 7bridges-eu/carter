@@ -12,3 +12,4 @@ pom.xml.asc
 .hg/
 /figwheel_server.log
 /resources/public/js
+/node_modules
