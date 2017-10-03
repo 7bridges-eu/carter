@@ -13,40 +13,40 @@
 ;; limitations under the License.
 
 (ns carter.graphs
-  (:require [cljsjs.d3]
-            [re-frame.core :as rf]
+  (:require [re-frame.core :as rf]
             [reagent.core :as reagent]))
 
 (def graph-width 850)
 (def graph-height 850)
 
+(def d3 js/d3)
+
 ;;; Circles graph
 (def pack
-  (-> js/d3 .pack (.size #js [graph-width graph-height]) (.padding 1.5)))
+  (-> (d3.pack) (.size #js [graph-width graph-height]) (.padding 1.5)))
 
 (defn get-data
-  "Retrieve data subscription. Add :value for d3.hierarchy."
+  "Retrieve data subscription. Add :value for d3/hierarchy."
   []
   (let [data @(rf/subscribe [:circles])]
     (mapv (fn [d] (assoc d :value (:tweets d))) data)))
 
 (defn data-clj->data-js
-  "Transform `data` in a JS object suitable for d3.hierachy."
+  "Transform `data` in a JS object suitable for d3/hierachy."
   [data]
   (clj->js {:name "hashtags" :children (get-data)}))
 
 (defn pack-hierarchy
   "Generate a d3 hierarchy from `data-js` and pack it."
   [data-js]
-  (-> js/d3
-      (.hierarchy data-js)
+  (-> (d3.hierarchy data-js)
       (.sum (fn [d] (.-value d)))
       pack))
 
 (defn create-circles
   "Create the node circles starting from `root` node."
   [root]
-  (-> (js/d3.select "#circles-graph svg")
+  (-> (d3.select "#circles-graph svg")
       (.selectAll ".node")
       (.data (.leaves root))
       .enter
@@ -57,12 +57,12 @@
       (.append "circle")
       (.attr "r" (fn [d] (.-r d)))
       (.style "fill" (fn [_]
-                       (nth (.-schemeCategory20c js/d3) (rand-int 20))))))
+                       (nth (js->clj d3.schemeCategory20c) (rand-int 20))))))
 
 (defn create-texts
   "Add hashtags to the circles."
   []
-  (-> (js/d3.select "#circles-graph svg")
+  (-> (d3.select "#circles-graph svg")
       (.selectAll ".node")
       (.append "text")
       (.attr "dy" ".3em")
@@ -77,7 +77,7 @@
 (defn create-tooltips
   "Add hashtags as tooltips to every circle."
   []
-  (-> (js/d3.select "#circles-graph svg")
+  (-> (d3.select "#circles-graph svg")
       (.selectAll ".node")
       (.append "title")
       (.text (fn [d]
@@ -96,7 +96,7 @@
 (defn circles-exit
   []
   (let [data (get-data)]
-    (-> (js/d3.select "#circles-graph svg")
+    (-> (d3.select "#circles-graph svg")
         (.selectAll "circle")
         (.data (clj->js data))
         .exit
@@ -109,7 +109,7 @@
 
 (defn circles-did-mount
   []
-  (-> (js/d3.select "#circles-graph svg")
+  (-> (d3.select "#circles-graph svg")
       (.append "g")
       (.attr "class" "circles"))
   (circles-did-update))
@@ -142,7 +142,7 @@
 ;;; Nodes graph
 (defn initialize-svg
   []
-  (-> (js/d3.select "#nodes-graph svg")
+  (-> (d3.select "#nodes-graph svg")
       (.append "defs")
       (.append "marker")
       (.attr "id" "arrowhead")
@@ -160,20 +160,20 @@
 
 (defn simulation
   []
-  (-> (js/d3.forceSimulation)
-      (.force "link" (-> (js/d3.forceLink)
+  (-> (d3.forceSimulation)
+      (.force "link" (-> (d3.forceLink)
                          (.id (fn [d] (.-id d)))
                          (.distance 100)))
-      (.force "charge" (-> (js/d3.forceManyBody)
+      (.force "charge" (-> (d3.forceManyBody)
                            (.strength -40)))
-      (.force "collide" (-> (js/d3.forceCollide)
+      (.force "collide" (-> (d3.forceCollide)
                             (.radius 10)))
       (.force "center"
-              (js/d3.forceCenter (/ graph-width 2) (/ graph-height 2)))))
+              (d3.forceCenter (/ graph-width 2) (/ graph-height 2)))))
 
 (defn build-links
   [links]
-  (let [elements (-> (js/d3.select "#nodes-graph svg")
+  (let [elements (-> (d3.select "#nodes-graph svg")
                      (.append "g")
                      (.attr "class" "link")
                      (.selectAll "line")
@@ -191,7 +191,7 @@
   [nodes drag-start dragged drag-end]
   (let [nodes-idx {"LoggedUser" 1 "User" 5
                    "Tweet" 9 "Hashtag" 12}]
-    (-> (js/d3.select "#nodes-graph svg")
+    (-> (d3.select "#nodes-graph svg")
         (.append "g")
         (.attr "class" "nodes")
         (.selectAll "circle")
@@ -201,16 +201,16 @@
         (.attr "r" 15)
         (.style "fill"
                 (fn [d]
-                  (nth (.-schemeCategory20c js/d3)
+                  (nth (js->clj d3.schemeCategory20c)
                        (get nodes-idx (.-label d)))))
-        (.call (-> (.drag js/d3)
+        (.call (-> (d3.drag)
                    (.on "start" drag-start)
                    (.on "drag" dragged)
                    (.on "end" drag-end))))))
 
 (defn build-texts
   [nodes]
-  (-> (js/d3.select "#nodes-graph svg")
+  (-> (d3.select "#nodes-graph svg")
       (.append "g")
       (.attr "class" "texts")
       (.selectAll "text")
@@ -248,18 +248,18 @@
             text (build-texts nodes-js)
             sim (simulation)
             drag-started (fn [d]
-                           (let [active (.-active (.-event js/d3))
-                                 x (.-x (.-event js/d3))
-                                 y (.-y (.-event js/d3))]
+                           (let [active (.-active (.-event d3))
+                                 x (.-x (.-event d3))
+                                 y (.-y (.-event d3))]
                              (-> sim
                                  (.alphaTarget 0.3)
                                  (.restart))
                              (aset d "fx" (.-x d))
                              (aset d "fy" (.-y d))))
             dragged (fn [d]
-                      (let [active (.-active (.-event js/d3))
-                            x (.-x (.-event js/d3))
-                            y (.-y (.-event js/d3))]
+                      (let [active (.-active (.-event d3))
+                            x (.-x (.-event d3))
+                            y (.-y (.-event d3))]
                         (aset d "fx" x)
                         (aset d "x" x)
                         (aset d "fy" y)))
@@ -289,12 +289,12 @@
       (let [{ns :nodes ls :links} nodes-links
             nodes (clj->js ns)
             links (clj->js ls)]
-        (-> (js/d3.select "#nodes-graph svg")
+        (-> (d3.select "#nodes-graph svg")
             (.selectAll ".node")
             (.data nodes)
             .exit
             .remove)
-        (-> (js/d3.select "#nodes-graph svg")
+        (-> (d3.select "#nodes-graph svg")
             (.selectAll ".link")
             (.data links)
             .exit
