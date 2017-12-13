@@ -13,12 +13,11 @@
 ;; limitations under the License.
 
 (ns carter.core
-  (:require [carter.services config orientdb http]
+  (:require [carter.services config http]
             [mount.core :as mount])
   (:gen-class))
 
 (defn -main
   [& args]
   (mount/start #'carter.services.config/config
-               #'carter.services.orientdb/orientdb
                #'carter.services.http/http-server))

@@ -1,82 +1,84 @@
-;; Copyright 2017 7bridges s.r.l.
-;;
-;; Licensed under the Apache License, Version 2.0 (the "License");
-;; you may not use this file except in compliance with the License.
-;; You may obtain a copy of the License at
-;;
-;; http://www.apache.org/licenses/LICENSE-2.0
-;;
-;; Unless required by applicable law or agreed to in writing, software
-;; distributed under the License is distributed on an "AS IS" BASIS,
-;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-;; See the License for the specific language governing permissions and
-;; limitations under the License.
-
 (ns carter.services.orientdb
   (:require [carter.services.config :refer [config]]
-            [clj-odbp.configure :as db-conf]
+            [clj-odbp.constants :as db-const]
             [clj-odbp.core :as db]
-            [mount.core :as mount]))
+            [clojure.string :as string]))
 
-(defn set-db-host
-  "Configure clj-odbp with the host from config.edn."
+(defn get-session
   []
-  (let [host (get-in config [:orient :host])]
-    (db-conf/configure-driver {:host host})))
-
-(defn reset-db-host
-  "Reset clj-odbp host to nil."
-  []
-  (db-conf/configure-driver {:host nil}))
-
-(mount/defstate orientdb
-  :start (set-db-host)
-  :stop (reset-db-host))
-
-(defn get-connection
-  "Open a connection to OrientDB."
-  []
-  (let [db-name (get-in config [:orient :db-name])
+  (let [host (get-in config [:orient :host])
+        port (get-in config [:orient :port])
+        db-name (get-in config [:orient :db-name])
         user (get-in config [:orient :properties :user])
         password (get-in config [:orient :properties :password])]
-    (db/db-open db-name user password)))
+    (db/db-open {:host host :port port} db-name user password)))
+
+(defn split-on-space [word]
+  (string/split word #"\s"))
+
+(defn inline-query
+  "Remove new lines and white spaces from `query`."
+  [query]
+  (->> query
+       split-on-space
+       (filter #(not (string/blank? %)))
+       (string/join " ")))
 
 (defn query!
   "Execute a sql query and return the results."
   ([query]
    (query! query {}))
   ([query params]
-   (let [conn (get-connection)]
-     (db/query-command conn query :params params))))
-
-(defn update!
-  "Execute a sql update and return the number of changed records."
-  [sql-parameters])
+   (let [q (inline-query query)]
+     (with-open [session (get-session)]
+       (db/query-command session q :params params)))))
 
 (defn delete!
   "Delete the record identified by `rid`."
   [rid]
-  (let [conn (get-connection)]
-    (db/record-delete conn rid)))
+  (with-open [session (get-session)]
+    (db/record-delete session rid)))
 
 (defn insert!
   "Insert a new record in the corresponding `class` with `params`."
   [class params]
-  (let [conn (get-connection)
-        record (assoc params :_class class)]
-    (db/record-create conn record)))
+  (let [record (assoc params :_class class)]
+    (with-open [session (get-session)]
+      (db/record-create session record))))
 
 (defn update!
   "Update the record of class `class` with `params`, identified by `rid.`"
   [class params rid]
-  (let [conn (get-connection)
-        record (assoc params :_class class)]
-    (db/record-update conn rid record)))
+  (let [record (assoc params :_class class)]
+    (with-open [session (get-session)]
+      (db/record-update session rid record))))
 
 (defn execute!
-  "Execute the given `command` adding `params` if present."
   ([command]
    (execute! command {}))
   ([command params]
-   (let [conn (get-connection)]
-     (db/execute-command conn command :params params))))
+   (let [c (inline-query command)]
+     (with-open [session (get-session)]
+       (db/execute-command session c :params params)))))
+
+(defn with-return
+  [s return]
+  (str s "\nRETURN " return))
+
+(defn script!
+  "From `commands` and optionally `returns`, return a string of operations.
+  The result will be the input of `execute-script!`."
+  ([commands]
+   (str "BEGIN\n"
+        (->> (map inline-query commands)
+             (interpose "\n")
+             (apply str))
+        "\nCOMMIT"))
+  ([commands return]
+   (-> (script! commands)
+       (with-return return))))
+
+(defn execute-script!
+  [command params]
+  (with-open [session (get-session)]
+    (db/execute-script session command db-const/language-sql :params params)))

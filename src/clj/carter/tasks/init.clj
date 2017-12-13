@@ -87,8 +87,7 @@
   (db/execute! "create property Has.logged_user_id string"))
 
 (defn -main []
-  (mount/start #'carter.services.config/config
-               #'carter.services.orientdb/orientdb)
+  (mount/start #'carter.services.config/config)
   (create-db-if-not-present!)
   (println "Creating Vertexes")
   (create-logged-user-vertex!)

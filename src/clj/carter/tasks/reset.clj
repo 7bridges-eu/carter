@@ -18,8 +18,7 @@
 
 (defn -main
   []
-  (mount/start #'carter.services.config/config
-               #'carter.services.orientdb/orientdb)
+  (mount/start #'carter.services.config/config)
   (println "Deleting Vertexes")
   (db/execute! "delete vertex LoggedUser")
   (db/execute! "delete vertex User")
