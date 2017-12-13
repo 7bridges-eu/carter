@@ -22,6 +22,7 @@ with the following format.
 ``` clojure
 {:http {:port 8080}
  :orient {:host <your-orientdb-instance>
+          :port <your-orientdb-port>
           :db-name <your-db-name>
           :properties {:user <your-user>
                        :password <your-password}}
